@@ -3,12 +3,10 @@
 sources:
     osm:
         type: TopoJSON
-        # This is my API Key for this project
-        # They are free! get one at https://mapzen.com/developers/sign_in
         url:  //vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-DFFH1UM
     iss:
         type: GeoJSON
-        url: data/iss.geojson
+        url: data/orbit.geojson
 cameras:
     perspective:
         type: flat
@@ -284,16 +282,6 @@ styles:
                     float light = 1.;
                     light = abs((step(.5,light_accumulator_diffuse.r) * smoothstep(.0,1.,1.-SatOsmPct))-light);
                     //
-                    // TARGET AREA
-                    //===============================
-                    float target = 0.0;
-                    // RECT
-                    //target += (rect(st_center,.21)-rect(st_center,.2))*.3;
-                    //target *= 1.0-cross(st_center,.5,1.);
-                    // CROSS
-                    target += cross(st_center,.00008,.02);
-                    color.rgb = mix(color.rgb,vec3(light),target);
-                    //
                     // GRID ON TILES
                     //===============================
                     // GRID
@@ -438,90 +426,6 @@ layers:
             draw:
                 spline:
                     order: function() { return 6 + feature.sort_key; }
-    places:
-        data: { source: osm }
-        filter: { name: true }
-        draw:
-            text:
-                visible: true
-                priority: 2
-                font:
-                    size: 14px
-                    family: ['Jura', Helvetica]
-                    fill: black
-                    stroke: { color: white , width: 3.5 }
-        continent:
-            filter: { name: true, kind: [continent], $zoom: {max: 5} }
-            draw:
-                text:
-                    visible: true
-                    font:
-                        size: 18px
-                        weight: bold
-                        transform: uppercase
-        region:
-            filter: { name: true, kind: [state], $zoom: {min: 6, max: 9} }
-            draw:
-                text:
-                    priority: 2
-                    visible: true
-                    text_source: function() { if(feature["name:short"]) { return feature["name"]; } else { return "" } }
-                    font:
-                        size: 16px
-                        fill: [0.3,0.3,0.3]
-                        transform: uppercase
-        populated-places:
-            draw:
-                text:
-                    offset: [0, 8px]
-
-            populated-places-natural-earth-z2-z3:
-                filter: { name: true, source: naturalearthdata.com, scalerank: 0 }
-                draw:
-                    text:
-                        priority: 1
-                        visible: true
-                        font:
-                            size: 18px
-        populated-places-osm:
-                filter: { name: true, source: openstreetmap, not: { kind: [country, county, state, island, neighbourhood, suburb, quarter] }, $zoom: {min: 8} }
-                draw:
-                    text:
-                        priority: 1
-                        interactive: true
-                        visible: true
-                        font:
-                            size: 16px
-                # add townspots from zoom 0 thru zoom 11
-                townspots:
-                    filter: { $zoom: { max: 11 } }
-                # nix major cities under z15
-                major-places:
-                    filter: { kind: [city], $zoom: { min: 13, max: 15 } }
-                    visible: false
-                    draw:
-                        text:
-                            font:
-                                size: 16px
-                major-places:
-                    filter: { kind: [city], $zoom: { min: 15 } }
-                    visible: false
-                    draw:
-                        text:
-                            visible: false
-                            font:
-                                size: 14px
-                medium-places:
-                    filter: { kind: [town], $zoom: { max: 11 } }
-                    visible: false
-                # nix podunk burgs under z15
-                minor-places-village:
-                    filter: { kind: [village], $zoom: { max: 12 } }
-                    visible: false
-                # mobile home parks, really?
-                minor-places-hamlet:
-                    filter: { kind: [hamlet], $zoom: { max: 16 } }
-                    visible: false
     features:
         data: { source: iss }
         filter: { kind: [orbit], $zoom: { min: 0, max: 9 } }

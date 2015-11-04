@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+    Tangram: real-time WebGL rendering for OpenStreetMap
+
+    http://github.com/tangrams/tangram
+    http://mapzen.com
+-->
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SatPredict</title>
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+    <link href='https://fonts.googleapis.com/css?family=Jura:400,300,600,500&subset=latin,cyrillic-ext,greek,latin-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <link type='text/css' rel='stylesheet' href="css/style.css">
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <!-- 3rd party libraries -->
+    <script src="lib/leaflet/leaflet.js"></script>
+    <!-- bog-standard leaflet URL hash -->
+    <script src="lib/leaflet-hash.js"></script>
+    <!-- Satellite-JS -->
+    <script src="lib/satellite.min.js"></script>
+    <!-- Tangram library -->
+    <script src="https://mapzen.com/tangram/0.3/tangram.min.js"></script>
+    <!-- End of 3rd party libraries -->
+    
+    <!-- MAIN -->
+    <script src="lib/common.js"></script>
+    <script src="main.js"></script>
+
+    <!-- Adding a script block to post message to the parent container (think iframed demos) -->
+    <script type="text/javascript">
+      window.addEventListener("hashchange",function(){parent.postMessage(window.location.hash, "*")});
+    </script>
+
+    <!-- Mapzen map UI -->
+    <script src='//s3.amazonaws.com/assets-staging.mapzen.com/ui/mapzen-ui.min.js'></script>
+    <script>
+    MPZN.bug({
+      name: 'OSM from ISS',
+      link: 'http://mapzen.com',
+      tweet: '@openstreetmap from the @space_station by @patriciogv and @mapzen',
+      repo: 'https://github.com/patriciogonzalezvivo/ISS'
+    });
+    </script>
+
+  </body>
+</html>

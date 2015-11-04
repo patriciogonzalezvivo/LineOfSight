@@ -5,12 +5,8 @@
 // var track = orbit.orbitData;
 var track = [];
 var timeDiff = 0;
-var lastDayNightOverlayUpdate = 0;
-var isMiles = false;
-var MILE_IN_KM = 1.609344;
 var place = "";
 var placeCounter = 0;
-var lastState = {};
 var createObjectURL = (window.URL && window.URL.createObjectURL) || (window.webkitURL && window.webkitURL.createObjectURL);
 var cloudOffset = [0,0];
 var offset_target = [0,0];
@@ -27,13 +23,7 @@ map = (function () {
     'use strict';
 
     // Leaflet Map
-    var map = L.map('map',{
-                            scrollWheelZoom: 'center', 
-                            dragging: false,
-                            minZoom: 4,
-                            maxZoom: 12,
-                            zoomControl: false 
-                        });
+    var map = L.map('map');
     // Tangram Layer
     var layer = Tangram.leafletLayer({
         scene: 'scene.yaml',
@@ -65,12 +55,7 @@ function init() {
         t.setSeconds(t.getSeconds() + stepSec); 
     }
 
-    var state = getSatelliteState( getCurrentTime() );
-    var time   = state.time;
-    var satLon = state.lon;
-    var satLat = state.lat;
-
-    map.setView([satLat, satLon], 5);
+    map.setView([0, 0], 3);
     // Scene initialized
     layer.on('init', function() {
         console.log("Creating orbit and cheching on WebGL ")
@@ -87,7 +72,7 @@ function init() {
             }
         }
         
-        window.setInterval("update(getCurrentTime())", 1000);
+        window.setInterval("updateSun(getCurrentTime())", 1000);
         window.setInterval("updateClouds(getCurrentTime())", 100);
 
         if (window.DeviceMotionEvent) {
@@ -97,12 +82,10 @@ function init() {
         document.addEventListener('mouseenter', onMouseUpdate, false);
     });
     layer.addTo(map);
-
-    updateLocation("");
 }
 
 function initOrbit() {
-    getHttp("data/iss.geojson", function(err, res){
+    getHttp("data/orbit.geojson", function(err, res){
         if (err) {
             console.error(err);
         }
@@ -139,24 +122,9 @@ Date.prototype.getJulian = function() {
     return Math.floor((this / 86400000) - (this.getTimezoneOffset()/1440) + 2440587.5);
 }
 
-function update(time) {   // time in seconds since Jan. 01, 1970 UTC
-    // Update position to the satelite
-    var state = getSatelliteState(time);
-    var options = {animate: true, duration: 1., easeLinearity: 1};
-
-    if (state.lon < -173) {
-        options.animate = false;
-        options.duration = 0.0;
-    }
-
-    map.panTo([state.lat, state.lon],options);    
-    document.getElementById('left-lat').innerHTML = "LAT " + state.lat.toFixed(4);
-    document.getElementById('left-lon').innerHTML = "LON " + state.lon.toFixed(4);
-    
+function updateSun(time) {   // time in seconds since Jan. 01, 1970 UTC
     // Update Sun position
     var now = new Date();
-    document.getElementById('left-time').innerHTML = now.getTime().toString();
-
     var cur_hour = now.getHours();
     var cur_min = now.getMinutes();
     var cur_sec = now.getSeconds();
@@ -171,8 +139,6 @@ function update(time) {   // time in seconds since Jan. 01, 1970 UTC
     var sunPos = [offset_x, offset_y]; 
     scene.styles.earth.shaders.uniforms.u_sun_offset = sunPos;
     scene.styles.water.shaders.uniforms.u_sun_offset = sunPos;
-
-    lastState = state;
 }
 
 function updateClouds() {
@@ -184,48 +150,6 @@ function updateClouds() {
         scene.styles.earth.shaders.uniforms.u_clouds_offset = cloudOffset;
         scene.styles.water.shaders.uniforms.u_clouds_offset = cloudOffset;
     }
-}
-
-function updateLocation(text) {
-    if (placeCounter > text.length || place === "") {
-        placeCounter = 0;
-        text = "";
-        var state = getSatelliteState(getCurrentTime());
-        updateGeocode(state.lat, state.lon);
-        setTimeout(function(){
-            updateLocation("");
-        }, 3000);
-    } else {
-        setTimeout( function(){
-            document.getElementById('loc').innerHTML = text + "<span>|</span>"; 
-            updateLocation(text+place.charAt(placeCounter++));
-        }, 100);
-    }
-}
-
-function updateGeocode (lat, lng) {
-
-    // This is my API Key for this project. 
-    // They are free! get one at https://mapzen.com/developers/sign_in
-    var PELIAS_KEY = 'search--cv2Foc';
-
-    var endpoint = '//search.mapzen.com/v1/reverse?point.lat=' + lat + '&point.lon=' + lng + '&size=1&layers=coarse&api_key=' + PELIAS_KEY;
-
-    getHttp(endpoint, function(err, res){
-        if (err) {
-            console.error(err);
-        }
-
-        // TODO: Much more clever viewport/zoom based determination of current location
-        var response = JSON.parse(res);
-        if (!response.features || response.features.length === 0) {
-            // Sometimes reverse geocoding returns no results
-            place = 'Unknown location';
-        }
-        else {
-            place = response.features[0].properties.label;
-        }
-    });
 }
 
 // ============================================= SET/GET
@@ -245,56 +169,6 @@ function setDefinition (defString) {
 
 function getCurrentTime() {   // time in seconds since Jan. 01, 1970 UTC
   return Math.round(new Date().getTime()/1000);
-}
-
-function getSatelliteState(time) {   // time in seconds since Jan. 01, 1970 UTC
-    if ( (time < track[0].t) || (time > track[track.length-1].t) ) {
-        console.log("Time out of limits", time, track[0].t, "-", track[track.length-1].t)
-        // window.location.reload(true);
-        return null;
-    }
-
-    try {
-        var idx = getIndex(time);
-        var state1 = track[idx];
-        var state2 = track[idx+1];
-        var factor = (time - state1.t) / (state2.t - state1.t);
-        var lon   = state1.ln + (state2.ln - state1.ln) * factor;
-        var lat   = state1.lt + (state2.lt - state1.lt) * factor;
-        return { time: time, lon: lon, lat: lat };
-        // var alt   = state1.h + (state2.h - state1.h) * factor;
-        // var speed = state1.v + (state2.v - state1.v) * factor;
-        // return { time: time, lon: lon, lat: lat, alt: alt, speed: speed };
-    }
-    catch (ex) {
-        console.log("Something went wrong", ex);
-        // window.location.reload(true);
-        return null;
-    }
-}
-
-function getIndex(time) {   // time in seconds since Jan. 01, 1970 UTC
-    var i = 0;
-    while ( (time > track[i].t) && (i < track.length) )
-        i++;
-    return i - 1;
-}
-
-function getHttp (url, callback) {
-    var request = new XMLHttpRequest();
-    var method = 'GET';
-
-    request.onreadystatechange = function () {
-        if (request.readyState === 4 && request.status === 200) {
-            var response = request.responseText;
-
-            // TODO: Actual error handling
-            var error = null;
-            callback(error, response);
-        }
-    };
-    request.open(method, url, true);
-    request.send();
 }
 
 function getSatellitePositionAt(satrec, date) {
@@ -322,16 +196,7 @@ function getSatellitePositionAt(satrec, date) {
     return { t: Math.round(date.getTime()/1000), ln: lon, lt: lat };
 }
 
-// ============================================= TOOLS
-function unhide(divID) {
-    var item = document.getElementById(divID);
-    if (item) {
-        item.className=(item.className=='hidden')?'unhidden':'hidden';
-    }
-}
-
 // ============================================= EVENTS
-
 function onMouseUpdate (e) {
     var mouse = [ (e.pageX/screen.width-.5)*0.005, (e.pageY/screen.height-.5)*-0.002];
     offset_target[0] = mouse[0];
