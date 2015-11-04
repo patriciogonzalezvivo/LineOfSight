@@ -1,0 +1,532 @@
+﻿# Author @patriciogv - 2015
+
+sources:
+    osm:
+        type: TopoJSON
+        # This is my API Key for this project
+        # They are free! get one at https://mapzen.com/developers/sign_in
+        url:  //vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-DFFH1UM
+    iss:
+        type: GeoJSON
+        url: data/iss.geojson
+cameras:
+    perspective:
+        type: flat
+lights:
+    point_light:
+        type: point
+        origin: ground
+        position: [0,0,1000px]
+        specular: 1
+        diffuse: 1
+styles:
+    geometry-matrices:
+        defines:
+            PI: 3.14159265358979323846
+        shaders:
+            blocks:
+                global: |
+                    // Rotate in 2, 3 and 4 dimensions
+                    // ================================
+                    mat2 rotate2D (float angle) {
+                        return mat2(cos(angle),-sin(angle),
+                                    sin(angle),cos(angle));
+                    }
+                    mat3 rotateX3D (float phi) {
+                        return mat3(
+                            vec3(1.,0.,0.),
+                            vec3(0.,cos(phi),-sin(phi)),
+                            vec3(0.,sin(phi),cos(phi)));
+                    }
+                    mat4 rotateX4D (float phi) {
+                        return mat4(
+                            vec4(1.,0.,0.,0),
+                            vec4(0.,cos(phi),-sin(phi),0.),
+                            vec4(0.,sin(phi),cos(phi),0.),
+                            vec4(0.,0.,0.,1.));
+                    }
+                    mat3 rotateY3D (float theta) {
+                        return mat3(
+                            vec3(cos(theta),0.,-sin(theta)),
+                            vec3(0.,1.,0.),
+                            vec3(sin(theta),0.,cos(theta)));
+                    }
+                    mat4 rotateY4D (float theta) {
+                        return mat4(
+                            vec4(cos(theta),0.,-sin(theta),0),
+                            vec4(0.,1.,0.,0.),
+                            vec4(sin(theta),0.,cos(theta),0.),
+                            vec4(0.,0.,0.,1.));
+                    }
+                    mat3 rotateZ3D (float psi) {
+                        return mat3(
+                            vec3(cos(psi),-sin(psi),0.),
+                            vec3(sin(psi),cos(psi),0.),
+                            vec3(0.,0.,1.));
+                    }
+                    mat4 rotateZ4D (float psi) {
+                        return mat4(
+                            vec4(cos(psi),-sin(psi),0.,0),
+                            vec4(sin(psi),cos(psi),0.,0.),
+                            vec4(0.,0.,1.,0.),
+                            vec4(0.,0.,0.,1.));
+                    }
+    geometry-projection:
+        shaders:
+            defines:
+                EARTH_RADIUS: 6378137.0
+                PI: 3.14159265358979323846
+                HALF_PI: 1.570796327
+                QUATER_PI: .785398163
+                deg2rad(d): (((d)*3.14159265358979323846)/180.0)
+                rad2deg(d): (((d)*180.0)/3.14159265358979323846)
+            blocks:
+                global: |
+                    //
+                    //    The following functions take or return there results in something close to meters, along the equator 
+                    //    http://wiki.openstreetmap.org/wiki/Mercator
+                    float y2lat_m (float y) { return rad2deg(2.0*atan(exp((y/EARTH_RADIUS)))-HALF_PI); }
+                    float x2lon_m (float x) { return rad2deg(x/EARTH_RADIUS); }
+                    float lat2y_m (float lat) { return EARTH_RADIUS*log(tan(QUATER_PI+ deg2rad(lat)/2.0)); }
+                    float lon2x_m (float lon) { return deg2rad(lon)*EARTH_RADIUS; }
+    functions-map:
+        shaders:
+            defines:
+                EPSILON: 0.0000001
+            blocks:
+                global: |
+                    float map (in float value, in float inputMin, in float inputMax, in float outputMin, in float outputMax, bool clamp) {
+                        if (abs(inputMin - inputMax) < EPSILON){
+                            return outputMin;
+                        } else {
+                            float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+                        
+                            if( clamp ){
+                                if(outputMax < outputMin){
+                                    if( outVal < outputMax ) outVal = outputMax;
+                                    else if( outVal > outputMin ) outVal = outputMin;
+                                }else{
+                                    if( outVal > outputMax ) outVal = outputMax;
+                                    else if( outVal < outputMin ) outVal = outputMin;
+                                }
+                            }
+                            return outVal;
+                        }
+                    }
+                    float map (in float value, in float inputMin, in float inputMax, in float outputMin, in float outputMax) {
+                        return map(value, inputMin, inputMax, outputMin, outputMax, true); 
+                    }
+    shapes-rect:
+        shaders:
+            blocks:
+                global: |
+                    // get distance field of a rectangle in the center
+                    // ================================
+                    float rectDF(vec2 st, vec2 size) {
+                        //float aspect = u_resolution.x/u_resolution.y;
+                        st = st*2.-1.;
+                        //st.x *= aspect;
+                        return length(max(abs(st)-size,.0));
+                    }
+                    float rectDF(vec2 st, float size) {
+                        //float aspect = u_resolution.x/u_resolution.y;
+                        st = st*2.-1.;
+                        //st.x *= aspect;
+                        return length(max(abs(st)-size,.0));
+                    }
+                    
+                    // Draw a round corners rectangle in the center
+                    // ================================
+                    float rect(vec2 st, vec2 size, float radio) {
+                        radio = max(.000001, radio);
+                        return 1.0-step(radio, rectDF(st, size-radio));
+                    }
+                    
+                    float rect(vec2 st, float size, float radio) {
+                        return rect(st,vec2(size),radio);
+                    }
+                    
+                    // Draw a rectangle in the center
+                    // ================================
+                    float rect(vec2 st, vec2 size){
+                        size = .25-size*.125;
+                        vec2 uv = step(size,st*(1.0-st));
+                        return (uv.x*uv.y);
+                    }
+                    
+                    float rect(vec2 st, float size){
+                        return rect(st,vec2(size));
+                    }
+    shapes-cross:
+        mix: shapes-rect
+        shaders:
+            blocks:
+                global: |
+                    // Draw a Cross in the middle of the ST space
+                    float cross (vec2 st, float size, float width) {
+                        return  clamp(  rect(st, vec2(size*0.5,width*0.125)) +
+                                        rect(st, vec2(width*0.125,size*0.5)),0.,1.);
+                    }
+    space-tile:
+        shaders:
+            defines:
+                TILE_SCALE: 0.0002445
+                NORMALIZED_SHORT(x): (x * 32767.)
+            blocks:
+                global: |
+                    // Variant to be add to both vertex and fragments shaders
+                    varying vec3 v_pos;
+                    //
+                    // Get the coordinates in tile space
+                    // ================================
+                    vec2 getTileCoords () {
+                        return fract(v_pos.xy*TILE_SCALE);
+                    }
+
+                position: |
+                    // Normalize the attribute position of a vertex
+                    v_pos = NORMALIZED_SHORT(a_position.xyz);
+    grid:
+        mix: space-tile
+        shaders:
+            blocks:
+                global: |
+                    //  Simple Grid
+                    //=============================
+                    float grid(in vec2 st, in float res, in float press){
+                        st = fract(st*res);
+                        return 1.0-(step(press*res*.7,st.x) * step(press*res*.7,st.y));
+                    }
+                    float grid(in vec2 st, in float res){
+                        return grid(st,res,0.005);
+                    }
+                    // GridTile
+                    //=============================
+                    float TileGrid(float res){
+                        vec2 st = getTileCoords()*100.*res;
+                        float pct = 0.0;
+                        float press = 0.5+(1.0-fract(u_map_position.z))*0.1;
+                        pct += grid(st,0.02,press)*.5;
+                        pct += grid(st,0.01,press)*.25;
+                        return pct*.5;
+                    }
+                    float TileGrid(){ return mix(TileGrid(1.),TileGrid(2.),fract(u_map_position.z)); }
+    sunlight:
+        base: polygons
+        mix: [geometry-projection, geometry-matrices, functions-map]
+        shaders:
+            uniforms:
+                u_sun_offset: [-92, -10.273909587413442]
+            blocks: 
+                global: |
+                    mat3 sphereMatrix (vec2 latlon) {
+                        return rotateY3D(deg2rad(latlon.y)) * rotateX3D(deg2rad(latlon.x));
+                    }
+                    void updateSun () {
+                        vec3 sun_pos = vec3(.0,.0,1495978.70700)*u_meters_per_pixel;
+                        sun_pos = rotateY3D(deg2rad(u_sun_offset.x))*rotateX3D(deg2rad(u_sun_offset.y))*sun_pos;
+                        point_light.position.xyz = sun_pos;
+                    }
+                normal: |
+                    vec2 pos = u_map_position.xy+v_position.xy;
+                    vec2 latlon = vec2(y2lat_m(pos.y),x2lon_m(pos.x)); // 90/180
+                    mat3 sphere = sphereMatrix(latlon);
+                    normal = normalize(sphere*normal)*2.;
+                    vec2 uv = (latlon.yx/vec2(180.,90.)+1.)*.5;
+                color: |
+                    updateSun();
+    zoom:
+        shaders:
+            blocks: 
+                normal: |
+                    float SatOsmPct = pow(1.-map(u_map_position.z,6.,9.,0.,1.),5.0);
+    textures:
+        base: polygons
+        mix: [sunlight, zoom]
+        animated: true
+        shaders:
+            uniforms:
+                u_normal_map: imgs/earth-normals-hd.jpg
+                u_day_map: imgs/earth-texture-day-xhd.jpg
+                u_night_map: imgs/earth-texture-night-xhd.jpg
+                u_cloud_map: imgs/earth-clouds-hd.jpg
+                u_clouds_offset: [0,0]
+            blocks:
+                global: |
+                    vec3 normalmap (vec2 st) {
+                        vec3 normalTex = texture2D(u_normal_map,fract(st)).rgb-.5;
+                        return normalTex;
+                    }
+                    vec4 multitexture ( vec2 st, float lightF, float zoomF ) {
+                        vec4 color = vec4(1.);
+                        color = mix(texture2D(u_night_map,fract(st)), 
+                                    texture2D(u_day_map,fract(st)),
+                                    clamp(lightF,0.,1.));
+                        float clouds = texture2D(u_cloud_map,fract(st+u_clouds_offset)).r;
+                        clouds *= lightF*2.-1.;
+                        return color+clouds*zoomF;
+                    }
+                filter: |
+                    color = mix(color,multitexture(uv,light_accumulator_diffuse.r,SatOsmPct),SatOsmPct);       
+    satelite:
+        mix: [shapes-cross, grid]
+        shaders:
+            blocks:
+                filter: |
+                    // VARIABLES
+                    //===============================
+                    color = clamp(color,0.0,1.0);
+                    vec2 st_center = gl_FragCoord.xy/u_resolution.xy;
+                    float aspect = u_resolution.x/u_resolution.y;
+                    st_center -= .5;
+                    st_center.x *= aspect;
+                    st_center += .5;
+                    float light = 1.;
+                    light = abs((step(.5,light_accumulator_diffuse.r) * smoothstep(.0,1.,1.-SatOsmPct))-light);
+                    //
+                    // TARGET AREA
+                    //===============================
+                    float target = 0.0;
+                    // RECT
+                    //target += (rect(st_center,.21)-rect(st_center,.2))*.3;
+                    //target *= 1.0-cross(st_center,.5,1.);
+                    // CROSS
+                    target += cross(st_center,.00008,.02);
+                    color.rgb = mix(color.rgb,vec3(light),target);
+                    //
+                    // GRID ON TILES
+                    //===============================
+                    // GRID
+                    vec2 st = getTileCoords();
+                    float zoom = 0.0001+fract(u_map_position.z);
+                    float overlayGrid = 0.0;
+                    overlayGrid += TileGrid()*.5;
+                    // CROSSES
+                    vec2 crosses_st = st + .5;
+                    vec2 crosses_st_f = fract(crosses_st);
+                    overlayGrid *= 1.-rect(crosses_st_f, .003*(1.+(1.-zoom)));
+                    overlayGrid += cross(crosses_st_f, .0001, .012*(1.+(1.-zoom)) )*.75;
+                    //
+                    // APPLY 
+                    //===============================
+                    color.rgb = mix(color.rgb,vec3(light),clamp(overlayGrid,0.,1.)); 
+                    //
+                    // FILTER
+                    //===============================
+                    //vec2 st_i = floor(st_center*(max(u_resolution.x,u_resolution.y))*.1 );
+                    //color += step(0.5,abs(mod(st_i.x,2.)-mod(st_i.y+1.,2.)))*0.1;                   
+    earth:
+        mix: [textures, satelite]
+        material: 
+            diffuse: white
+            specular: black
+        shaders:
+            blocks: 
+                normal: |
+                    normal = mix(normal,sphere*normalmap(uv)*3.,SatOsmPct);
+    water:
+        mix: [textures, satelite]
+        material:
+            diffuse: white
+            specular: white
+        animated: true
+        shaders:
+            blocks: 
+                normal: |
+                    normal = mix(normal,sphere*normalmap(uv)*3.,SatOsmPct);
+    spline:
+        base: lines
+        lighting: false
+    area:
+        base: polygons
+        mix: [functions-map, zoom, satelite, geometry-matrices]
+        blend: inlay
+        shaders: 
+            blocks: 
+                global: |
+                    float stripes(vec2 st, float width){
+                        st = rotate2D(.72)*st;
+                        st *= 92.;
+                        return step(.5+width*0.5,abs(sin(st.y*3.14159265358)));
+                    }
+                filter: |
+                    color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
+layers:
+    earth:
+        data: { source: osm }
+        draw:
+            earth:
+                order: 0
+                color: '#555'
+            spline:
+                order: 3
+                color: white
+                width: [[1,0px],[5,1.5px]]
+    water:
+        data: { source: osm }
+        draw:
+            water:
+                order: 1
+                color: '#ddd'
+    landuse:
+        data: { source: osm }
+        draw:
+            area:
+                order: 2
+                color: gray
+    roads:
+        data: { source: osm, layer: roads }
+        filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
+        draw:
+            spline:
+                order: 7
+                color: white
+                width: [[6,0px], [7,.25px], [10, .5px], [15, .75px], [17, 5m]]
+        highway:
+            filter: { kind: highway }
+            draw:
+                spline:
+                    order: 8
+                    color: [1.000,0.897,0.058]
+                    width: [[1,0px], [6,.25px], [11, 2px], [14, 3px], [16, 4px], [17, 10m]]
+            link:
+                filter: { is_link: yes } # on- and off-ramps, etc
+                draw:
+                    spline:
+                        color: [1.000,0.933,0.710]
+                        width: [[10,0px], [14, 3px], [16, 5px], [18, 10m]]
+                tunnel-link:
+                    filter: {is_tunnel: yes, $zoom: {min: 13} }
+                    draw:
+                        spline:
+                            color: [0.805,0.748,0.557]
+            tunnel:
+                filter: {is_tunnel: yes, $zoom: {min: 13} }
+                draw:
+                    spline:
+                        order: 5
+                        color: [0.805,0.748,0.557]
+        major_road:
+            filter: { kind: major_road }
+            draw:
+                spline:
+                    color: [[13, [0.8, 0.8, 0.8]], [17, white]]
+                    width: [[1,0px], [6,.5px], [11,1px], [14, 2px], [16, 2.5px], [19, 8m]]
+                    primary:
+                        filter: { highway: primary }
+                        draw:
+                            spline:
+                                width: [[1,0px], [6,.5px], [11,1px], [11, 1.5px], [13, 2.5px], [16, 2.5px], [19, 8m]]
+                    secondary:
+                        filter: { highway: secondary }
+                        draw:
+                            spline:
+                                width: [[1,0px], [6,.5px], [11,1px], [13, 1.5px], [14, 2.5px], [16, 2.5px], [19, 8m]]
+                    tertiary:
+                        filter: { highway: tertiary }
+                        draw:
+                            spline:
+                                width: [[1,0px], [6,.5px], [11,1px], [13, .75px], [14, 2.5px], [16, 2.5px], [19, 8m]]
+        path:
+            filter: { kind: path }
+            draw:
+                spline:
+                    color: [0.8, 0.8, 0.8]
+                    width: [[14,.1px],[16,.5px], [17, 2m]]
+        z-order:
+            filter: { $zoom: {min: 14} }
+            draw:
+                spline:
+                    order: function() { return 6 + feature.sort_key; }
+    places:
+        data: { source: osm }
+        filter: { name: true }
+        draw:
+            text:
+                visible: true
+                priority: 2
+                font:
+                    size: 14px
+                    family: ['Jura', Helvetica]
+                    fill: black
+                    stroke: { color: white , width: 3.5 }
+        continent:
+            filter: { name: true, kind: [continent], $zoom: {max: 5} }
+            draw:
+                text:
+                    visible: true
+                    font:
+                        size: 18px
+                        weight: bold
+                        transform: uppercase
+        region:
+            filter: { name: true, kind: [state], $zoom: {min: 6, max: 9} }
+            draw:
+                text:
+                    priority: 2
+                    visible: true
+                    text_source: function() { if(feature["name:short"]) { return feature["name"]; } else { return "" } }
+                    font:
+                        size: 16px
+                        fill: [0.3,0.3,0.3]
+                        transform: uppercase
+        populated-places:
+            draw:
+                text:
+                    offset: [0, 8px]
+
+            populated-places-natural-earth-z2-z3:
+                filter: { name: true, source: naturalearthdata.com, scalerank: 0 }
+                draw:
+                    text:
+                        priority: 1
+                        visible: true
+                        font:
+                            size: 18px
+        populated-places-osm:
+                filter: { name: true, source: openstreetmap, not: { kind: [country, county, state, island, neighbourhood, suburb, quarter] }, $zoom: {min: 8} }
+                draw:
+                    text:
+                        priority: 1
+                        interactive: true
+                        visible: true
+                        font:
+                            size: 16px
+                # add townspots from zoom 0 thru zoom 11
+                townspots:
+                    filter: { $zoom: { max: 11 } }
+                # nix major cities under z15
+                major-places:
+                    filter: { kind: [city], $zoom: { min: 13, max: 15 } }
+                    visible: false
+                    draw:
+                        text:
+                            font:
+                                size: 16px
+                major-places:
+                    filter: { kind: [city], $zoom: { min: 15 } }
+                    visible: false
+                    draw:
+                        text:
+                            visible: false
+                            font:
+                                size: 14px
+                medium-places:
+                    filter: { kind: [town], $zoom: { max: 11 } }
+                    visible: false
+                # nix podunk burgs under z15
+                minor-places-village:
+                    filter: { kind: [village], $zoom: { max: 12 } }
+                    visible: false
+                # mobile home parks, really?
+                minor-places-hamlet:
+                    filter: { kind: [hamlet], $zoom: { max: 16 } }
+                    visible: false
+    features:
+        data: { source: iss }
+        filter: { kind: [orbit], $zoom: { min: 0, max: 9 } }
+        draw:
+            spline:
+                order: 10
+                color: [[1,[0.906,0.914,0.0]],[9,[0.914,0.914,0.914]]]
+                width: [[1, 2px], [7, 1.5px], [8, 0.5px], [9, 0px] ]

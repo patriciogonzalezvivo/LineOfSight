@@ -1,0 +1,98 @@
+body {
+    font-family: 'Orbitron', Helvetica, Arial;
+    margin: 0px;
+    border: 0px;
+    padding: 0px;
+}
+
+#map {
+    background: black;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: 0;
+}
+
+#mz-citysearch, #mz-geolocator { 
+    display: none 
+}
+
+#info {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    bottom: 20px; 
+    width: 100%;
+    text-align: center;
+    pointer-event: none;
+    color: white;
+    text-outline: 2px 2px black;
+}
+
+#loc {
+    background-color: rgba(0,0,0,0.5);
+    display: table;
+    font-size: 18px;
+    margin: 0px auto 0px auto;
+}
+
+#loc span{
+  animation: blink 1s infinite;
+  font-size: 28px;
+}
+
+@keyframes blink{
+  to{opacity: .0;}
+}
+
+#left-info {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    top: 500px; 
+    left: -480px;
+    -ms-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+    pointer-event: none;
+    color: white;
+    text-outline: 2px 2px black;
+    width: 1000px;
+    font-size: 14px;
+}
+
+.leaflet-control-attribution {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    color: black;
+    background-color: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.5);
+}
+
+.leaflet-control-attribution a {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    color: black;
+}
+
+#left-info p {
+    display: inline-block;
+    margin-left: 80px ;
+    background-color: rgba(0,0,0,0.1);
+}
+
+#stream {
+    position: absolute; 
+    top: 1px; 
+    right: 7px; 
+    cursor: pointer;
+}
+
+#icon {
+    width: 50px;
+    height: 50px;
+    position: absolute; 
+    top: 5px; 
+    right: 15px;
+    cursor: pointer;
+    fill: gray;
+    z-index: 100;
+    opacity: .8;
+}
+
+.hidden { display: none; }
+.unhidden { display: block; }
