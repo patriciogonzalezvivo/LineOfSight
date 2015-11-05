@@ -4,7 +4,7 @@ sources:
     osm:
         type: TopoJSON
         url:  //vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-DFFH1UM
-    iss:
+    orbits:
         type: GeoJSON
         url: data/orbit.geojson
 cameras:
@@ -362,6 +362,22 @@ layers:
             area:
                 order: 2
                 color: gray
+    orbit:
+        data: { source: orbits }
+        draw:
+            spline:
+                order: 10
+                color: [[1,[0.906,0.914,0.0]],[9,[0,0,0]]]
+                width: 2px
+            text:
+                order: 11
+                offset: [0px, 8px]
+                font:
+                    fill: black
+                    family: ['Jura', Helvetica]
+                    size: 14px
+                    weight: 100
+                    stroke: { color: white , width: 3.5 }
     roads:
         data: { source: osm, layer: roads }
         filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
@@ -426,11 +442,3 @@ layers:
             draw:
                 spline:
                     order: function() { return 6 + feature.sort_key; }
-    features:
-        data: { source: iss }
-        filter: { kind: [orbit], $zoom: { min: 0, max: 9 } }
-        draw:
-            spline:
-                order: 10
-                color: [[1,[0.906,0.914,0.0]],[9,[0.914,0.914,0.914]]]
-                width: [[1, 2px], [7, 1.5px], [8, 0.5px], [9, 0px] ]

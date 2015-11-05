@@ -2,20 +2,14 @@
 
 // ============================================= VARIABLES
 //
-// var track = orbit.orbitData;
-var track = [];
 var timeDiff = 0;
-var place = "";
-var placeCounter = 0;
-var createObjectURL = (window.URL && window.URL.createObjectURL) || (window.webkitURL && window.webkitURL.createObjectURL);
 var cloudOffset = [0,0];
 var offset_target = [0,0];
 
 // ISS TLL lines
-var tleLine1 = '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
-    tleLine2 = '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408';
-
-var satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+var ISS = { name: "ISS" ,
+            tleLine1: '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
+            tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' };
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -47,14 +41,6 @@ map = (function () {
 }());
 
 function init() {
-    var t = new Date();
-    t.setMinutes ( t.getMinutes() - 2 );
-    var stepSec = 60;
-    for (var i = 0; i < 98; i++) {
-        track.push(getSatellitePositionAt(satrec,t));
-        t.setSeconds(t.getSeconds() + stepSec); 
-    }
-
     map.setView([0, 0], 3);
     // Scene initialized
     layer.on('init', function() {
@@ -72,8 +58,8 @@ function init() {
             }
         }
         
-        window.setInterval("updateSun(getCurrentTime())", 1000);
-        window.setInterval("updateClouds(getCurrentTime())", 100);
+        window.setInterval("updateSun()", 1000);
+        window.setInterval("updateClouds()", 100);
 
         if (window.DeviceMotionEvent) {
             window.addEventListener("devicemotion", onMotionUpdate, false);
@@ -85,35 +71,7 @@ function init() {
 }
 
 function initOrbit() {
-    getHttp("data/orbit.geojson", function(err, res){
-        if (err) {
-            console.error(err);
-        }
-
-        var response = JSON.parse(res);
-        response.features[0].geometry.coordinates = [];
-        response.features[1].geometry.coordinates = [];
-
-        var prevLon = track[0].ln;
-        var currentGeom = 0;
-        for (var i = 0; i < track.length; i++) {
-            if (prevLon > 0.0 && track[i].ln < 0.0){
-                response.features[currentGeom].geometry.coordinates.push([track[i].ln+360, track[i].lt])
-                currentGeom = 1;
-            }
-            response.features[currentGeom].geometry.coordinates.push([track[i].ln, track[i].lt]);
-            prevLon = track[i].ln;
-        }
-
-        if (response.features[1].geometry.coordinates.length === 0.0) {
-            response.features.length = 1;
-        }
-
-        var content = JSON.stringify(response);
-
-        scene.config.sources.iss.url = createObjectURL(new Blob([content]));
-        scene.rebuild();
-    });
+    addOrbitToTangramSource("orbits", ISS);
 }
 
 // ============================================= UPDATE
@@ -122,7 +80,7 @@ Date.prototype.getJulian = function() {
     return Math.floor((this / 86400000) - (this.getTimezoneOffset()/1440) + 2440587.5);
 }
 
-function updateSun(time) {   // time in seconds since Jan. 01, 1970 UTC
+function updateSun() {   // time in seconds since Jan. 01, 1970 UTC
     // Update Sun position
     var now = new Date();
     var cur_hour = now.getHours();
@@ -165,35 +123,6 @@ function setDefinition (defString) {
         scene.load(url,false);
         initOrbit();
     });
-}
-
-function getCurrentTime() {   // time in seconds since Jan. 01, 1970 UTC
-  return Math.round(new Date().getTime()/1000);
-}
-
-function getSatellitePositionAt(satrec, date) {
-    var position_and_velocity = satellite.propagate(satrec,
-                                                    date.getUTCFullYear(), 
-                                                    date.getUTCMonth() + 1,
-                                                    date.getUTCDate(),
-                                                    date.getUTCHours(), 
-                                                    date.getUTCMinutes(), 
-                                                    date.getUTCSeconds());
-
-    var position_eci = position_and_velocity["position"];
-    var gmst = satellite.gstimeFromDate(date.getUTCFullYear(), 
-                                           date.getUTCMonth() + 1, // Note, this function requires months in range 1-12. 
-                                           date.getUTCDate(),
-                                           date.getUTCHours(), 
-                                           date.getUTCMinutes(), 
-                                           date.getUTCSeconds());
-    // Geodetic
-    var position_gd    = satellite.eciToGeodetic(position_eci, gmst);
-
-    // Geodetic coords are accessed via "longitude", "latitude".
-    var lon = satellite.degreesLong(position_gd["longitude"]);
-    var lat = satellite.degreesLat(position_gd["latitude"]);
-    return { t: Math.round(date.getTime()/1000), ln: lon, lt: lat };
 }
 
 // ============================================= EVENTS

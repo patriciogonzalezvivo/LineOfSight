@@ -1,33 +1,4 @@
 {
     "type": "FeatureCollection",
-    "features": [
-        { 
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]
-                ]
-            },
-            "properties": {
-                "kind": "orbit",
-                "type": "satelite",
-                "name": "ISS"
-            }
-        },
-        { 
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]
-                ]
-            },
-            "properties": {
-                "kind": "orbit",
-                "type": "satelite",
-                "name": "ISS"
-            }
-        }
-    ]
+    "features": []
 }
