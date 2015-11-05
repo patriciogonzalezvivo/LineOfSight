@@ -367,7 +367,7 @@ layers:
         draw:
             spline:
                 order: 10
-                color: [[1,[0.906,0.914,0.0]],[9,[0,0,0]]]
+                color: Style.color.pseudoRandomColor()
                 width: 2px
             text:
                 order: 11

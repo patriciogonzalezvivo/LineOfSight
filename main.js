@@ -7,9 +7,17 @@ var cloudOffset = [0,0];
 var offset_target = [0,0];
 
 // ISS TLL lines
-var ISS = { name: "ISS" ,
+var ISS = {     
+            name: 'ISS',
             tleLine1: '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
-            tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' };
+            tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' 
+        };
+
+var SCUBE = {   
+            name: "S-CUBE",                 
+            tleLine1: '1 40898U 98067GY  15305.82492873  .00034571  00000-0  47173-3 0  9991',
+            tleLine2: '2 40898  51.6406 116.6319 0007444  96.7092 263.4748 15.57127173  6944'
+        };
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -71,7 +79,7 @@ function init() {
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", ISS);
+    addOrbitToTangramSource("orbits", [ISS, SCUBE]);
 }
 
 // ============================================= UPDATE
