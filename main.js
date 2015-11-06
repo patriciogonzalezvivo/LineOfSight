@@ -1,16 +1,32 @@
 // Author: @patriciogv 2015
 
-var ISS = {     
-            name: 'ISS',
-            tleLine1: '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
-            tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' 
-        };
-
-var SCUBE = {   
-            name: "S-CUBE",                 
-            tleLine1: '1 40898U 98067GY  15305.82492873  .00034571  00000-0  47173-3 0  9991',
-            tleLine2: '2 40898  51.6406 116.6319 0007444  96.7092 263.4748 15.57127173  6944'
-        };
+var satellites = [
+                {     
+                    name: 'ISS',
+                    tleLine1: '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
+                    tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' 
+                },
+                {   
+                    name: 'S-CUBE',                 
+                    tleLine1: '1 40898U 98067GY  15305.82492873  .00034571  00000-0  47173-3 0  9991',
+                    tleLine2: '2 40898  51.6406 116.6319 0007444  96.7092 263.4748 15.57127173  6944'
+                },
+                {
+                    name: 'NOAA 15',      
+                    tleLine1: '1 25338U 98030A   15120.50133940  .00000181  00000-0  95272-4 0  9994',
+                    tleLine2: '2 25338  98.7718 119.1083 0009683 311.6024  48.4325 14.25608869882046'
+                },
+                {
+                    name: 'NOAA 18',      
+                    tleLine1: '1 28654U 05018A   15120.45078669  .00000138  00000-0  10028-3 0  9999',
+                    tleLine2: '2 28654  99.1821 111.9351 0015379  94.2653 266.0275 14.12186249512332'
+                },
+                {
+                    name: 'NOAA 19',      
+                    tleLine1: '1 33591U 09005A   15120.47475619  .00000166  00000-0  11521-3 0  9993',
+                    tleLine2: '2 33591  98.9860  70.2496 0013223 308.0264  51.9713 14.11922134320756'
+                }
+                ];
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -58,20 +74,31 @@ function init() {
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", [ISS, SCUBE]);
+    addOrbitToTangramSource("orbits", satellites);
 }
 
 window.setTimeout( function() {
-    console.log("Creating texture");
-    var sat = ISS;
+    var gl = scene.gl;
+    var floatTextures = gl.getExtension('OES_texture_float');
+    if (!floatTextures) {
+        console.log('NO FLOATING POINT TEXTURE SUPPORT');
+        return;
+    } else {
+        console.log('Floating point texture support');
+    }
+
     var samplesTotal = 98;
     var samplesStep = 60; // sec
 
-    // Generate the orbit;
-    var track = getOrbitTrack(sat,60,samplesTotal);
+    var tracks = [];
 
+    for (var sat of satellites) {
+        // Generate the orbit for each satellite
+        tracks.push(getOrbitTrack(sat,60,samplesTotal));
+    }
+    
     var width = samplesTotal;
-    var height = 4;
+    var height = satellites.length;
 
     // // Using Canvas
     // var canvas = document.createElement("canvas");
@@ -98,14 +125,7 @@ window.setTimeout( function() {
     //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
     //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
     //      - http://nullprogram.com/blog/2014/06/29/
-    var gl = scene.gl;
-    var floatTextures = gl.getExtension('OES_texture_float');
-    if (!floatTextures) {
-        console.log('no floating point texture support');
-    } else {
-        console.log('floating point texture support');
-    }
-
+    
     var uniforms = {};
     uniforms.u_lut = {};
 
@@ -113,7 +133,7 @@ window.setTimeout( function() {
     for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
             var index = (y*width+x)*4;
-            var data = [ .5+(track[x].ln/180)*.5, .5+(track[x].lt/90)*.5];
+            var data = [ .5+(tracks[y][x].ln/180)*.5, .5+(tracks[y][x].lt/90)*.5];
             pixels[index] = data[0];
             pixels[index+1] = data[1];
             pixels[index+2] = 0;
@@ -121,6 +141,7 @@ window.setTimeout( function() {
         }
     }
     var texture = scene.styles.orbit.program.uniforms.u_lut;
+    scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal,height,samplesStep];
     gl.activeTexture(gl.TEXTURE0);
     // gl.bindTexture(gl.TEXTURE_2D, 0);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
