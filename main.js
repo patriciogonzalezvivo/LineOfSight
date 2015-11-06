@@ -66,8 +66,8 @@ function init() {
             }
         }
         
-        window.setInterval("updateSun()", 1000);
-        window.setInterval("updateClouds()", 100);
+        // window.setInterval("updateSun()", 1000);
+        // window.setInterval("updateClouds()", 100);
 
         if (window.DeviceMotionEvent) {
             window.addEventListener("devicemotion", onMotionUpdate, false);

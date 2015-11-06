@@ -10,13 +10,13 @@ sources:
 cameras:
     perspective:
         type: flat
-lights:
-    point_light:
-        type: point
-        origin: ground
-        position: [0,0,1000px]
-        specular: 1
-        diffuse: 1
+# lights:
+#     point_light:
+#         type: point
+#         origin: ground
+#         position: [0,0,1000px]
+#         specular: 1
+#         diffuse: 1
 styles:
     geometry-matrices:
         defines:
@@ -211,7 +211,7 @@ styles:
                     float TileGrid(){ return mix(TileGrid(1.),TileGrid(2.),fract(u_map_position.z)); }
     sunlight:
         base: polygons
-        mix: [geometry-projection, geometry-matrices, functions-map]
+        mix: [geometry-projection, geometry-matrices]
         shaders:
             uniforms:
                 u_sun_offset: [-92, -10.273909587413442]
@@ -234,6 +234,7 @@ styles:
                 color: |
                     updateSun();
     zoom:
+        mix: functions-map
         shaders:
             blocks: 
                 normal: |
@@ -264,9 +265,11 @@ styles:
                         clouds *= lightF*2.-1.;
                         return color+clouds*zoomF;
                     }
+                normal: |
+                    normal = mix(normal,sphere*normalmap(uv)*3.,SatOsmPct);
                 filter: |
                     color = mix(color,multitexture(uv,light_accumulator_diffuse.r,SatOsmPct),SatOsmPct);       
-    satelite:
+    hud:
         mix: [shapes-cross, grid]
         shaders:
             blocks:
@@ -304,30 +307,23 @@ styles:
                     //vec2 st_i = floor(st_center*(max(u_resolution.x,u_resolution.y))*.1 );
                     //color += step(0.5,abs(mod(st_i.x,2.)-mod(st_i.y+1.,2.)))*0.1;                   
     earth:
-        mix: [textures, satelite]
+        base: polygons
+        # mix: [hud, zoom] #[textures, hud]
         material: 
             diffuse: white
             specular: black
-        shaders:
-            blocks: 
-                normal: |
-                    normal = mix(normal,sphere*normalmap(uv)*3.,SatOsmPct);
     water:
-        mix: [textures, satelite]
+        base: polygons
+        mix: [hud, zoom] #[textures, hud]
         material:
             diffuse: white
             specular: white
-        animated: true
-        shaders:
-            blocks: 
-                normal: |
-                    normal = mix(normal,sphere*normalmap(uv)*3.,SatOsmPct);
     spline:
         base: lines
         lighting: false
     area:
         base: polygons
-        mix: [functions-map, zoom, satelite, geometry-matrices]
+        mix: [zoom, hud, geometry-matrices]
         blend: inlay
         shaders: 
             blocks: 
@@ -339,6 +335,17 @@ styles:
                     }
                 filter: |
                     color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
+    orbit:
+        base: lines
+        lighting: false
+        texcoords: true
+        shaders:
+            uniforms:
+                u_lut: imgs/lut.png
+            blocks:
+                color: |
+                    color.rgb += texture2D(u_lut,v_texcoord).rgb;
+
 layers:
     earth:
         data: { source: osm }
@@ -355,7 +362,7 @@ layers:
         draw:
             water:
                 order: 1
-                color: '#ddd'
+                color: '#aaa'
     landuse:
         data: { source: osm }
         draw:
@@ -365,10 +372,10 @@ layers:
     orbit:
         data: { source: orbits }
         draw:
-            spline:
+            orbit:
                 order: 10
                 color: Style.color.pseudoRandomColor()
-                width: 2px
+                width: 10px
             text:
                 order: 11
                 offset: [0px, 8px]
@@ -441,4 +448,4 @@ layers:
             filter: { $zoom: {min: 14} }
             draw:
                 spline:
-                    order: function() { return 6 + feature.sort_key; }
+                    order: function() {return 6 + feature.sort_key;}
