@@ -33,6 +33,13 @@ map = (function () {
 
     var hash = new L.Hash(map);
 
+    // Events
+    layer.scene.subscribe({
+        load: (args) => {
+            console.log("Scene Loaded");
+        }
+    });
+
     /***** Render loop *****/
     window.addEventListener('load', function () {
         init();
@@ -54,21 +61,16 @@ function initOrbit() {
     addOrbitToTangramSource("orbits", [ISS, SCUBE]);
 }
 
-function initTexture() {
+window.setTimeout( function() {
+    console.log("Creating texture");
     var sat = ISS;
+    var samplesTotal = 98;
+    var samplesStep = 60; // sec
 
     // Generate the orbit;
-    var track = [];
-    var satrec = satellite.twoline2satrec(sat.tleLine1, sat.tleLine2);
-    var t = new Date();
-    t.setMinutes(t.getMinutes() - 2);
-    var stepSec = 60;
-    for (var i = 0; i < 98; i++) {
-        track.push(getSatellitePositionAt(satrec,t));
-        t.setSeconds(t.getSeconds() + stepSec); 
-    }
+    var track = getOrbitTrack(sat,60,samplesTotal);
 
-    var width = 98;
+    var width = samplesTotal;
     var height = 4;
 
     // // Using Canvas
@@ -92,6 +94,10 @@ function initTexture() {
     // scene.rebuild();
 
     // // Using WebGL
+    // Usefull resources: 
+    //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
+    //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
+    //      - http://nullprogram.com/blog/2014/06/29/
     var gl = scene.gl;
     var floatTextures = gl.getExtension('OES_texture_float');
     if (!floatTextures) {
@@ -110,8 +116,8 @@ function initTexture() {
             var data = [ .5+(track[x].ln/180)*.5, .5+(track[x].lt/90)*.5];
             pixels[index] = data[0];
             pixels[index+1] = data[1];
-            pixels[index+2] = 0.0;
-            pixels[index+3] = 1.0;
+            pixels[index+2] = 0;
+            pixels[index+3] = 1;
         }
     }
     var texture = scene.styles.orbit.program.uniforms.u_lut;
@@ -133,4 +139,4 @@ function initTexture() {
     );
     // gl.bindTexture(gl.TEXTURE_2D, null);
     scene.rebuild();
-}
+},5000);
