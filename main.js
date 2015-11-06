@@ -33,8 +33,20 @@ var satellites = [
 map = (function () {
     'use strict';
 
+    var map_start_location = [0, 0, 4];
+    /*** URL parsing ***/
+    var url_hash = window.location.hash.slice(1).split('/');
+    if (url_hash.length == 3) {
+        map_start_location = [url_hash[1],url_hash[2], url_hash[0]];
+        map_start_location = map_start_location.map(Number);
+    }
+
     // Leaflet Map
-    var map = L.map('map');
+    var map = L.map('map',{
+        maxZoom: 20,
+        trackResize: true,
+        keyboard: false
+    });
     // Tangram Layer
     var layer = Tangram.leafletLayer({
         scene: 'scene.yaml',
@@ -45,16 +57,17 @@ map = (function () {
     var scene = layer.scene;
     window.scene = scene;
 
-    map.setView([0, 0], 4);
-
+    map.setView(map_start_location.slice(0, 2), map_start_location[2]);
     var hash = new L.Hash(map);
 
-    // Events
-    layer.scene.subscribe({
-        load: (args) => {
-            console.log("Scene Loaded");
-        }
-    });
+     // Resize map to window
+    function resizeMap() {
+        document.getElementById('map').style.width = window.innerWidth + 'px';
+        document.getElementById('map').style.height = window.innerHeight + 'px';
+        map.invalidateSize(false);
+    }
+    window.addEventListener('resize', resizeMap);
+    resizeMap();
 
     /***** Render loop *****/
     window.addEventListener('load', function () {
@@ -65,7 +78,6 @@ map = (function () {
 }());
 
 function init() {
-    map.setView([0, 0], 3);
     // Scene initialized
     layer.on('init', function() {
         initOrbit();
