@@ -253,8 +253,8 @@ styles:
                     float index = (color.r)*255.+.5;
                     vec2 posA = texture2D(u_lut,vec2(offset/u_param.x,1.-index/u_param.y)).xy;
                     vec2 posB = texture2D(u_lut,vec2((offset+1.)/u_param.x,1.-index/u_param.y)).xy;
-                    float spot = 1.0-step(.002/max(u_map_position.z,1.),distance(uv,mix(posA,posB,fract(offset))));
-                    color.rgb = mix(color.rgb, vec3(1.,0.0,0.0), spot);
+                    float spot = 1.0-step(.002/max(u_map_position.z*2.,1.),distance(uv,mix(posA,posB,fract(offset))));
+                    color.rgb = mix(vec3(1.,1.,0.), vec3(1.,0.0,0.0), spot);
                     color.a = spot + pulse(v_texcoord.x,.5,.1)*.5;
 layers:
     earth:
