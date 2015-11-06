@@ -99,14 +99,14 @@ window.setTimeout( function() {
         console.log('Floating point texture support');
     }
 
-    var samplesTotal = 98;
-    var samplesStep = 60; // sec
+    var samplesTotal = 98*6;
+    var samplesStep = 60/6; // sec
 
     var tracks = [];
 
     for (var sat of satellites) {
         // Generate the orbit for each satellite
-        tracks.push(getOrbitTrack(sat,60,samplesTotal));
+        tracks.push(getOrbitTrack(sat,samplesStep,samplesTotal));
     }
     
     var width = samplesTotal;
