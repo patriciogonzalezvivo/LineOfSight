@@ -33,7 +33,7 @@ var satellites = [
 map = (function () {
     'use strict';
 
-    var map_start_location = [0, 0, 4];
+    var map_start_location = [0, 0, 3];
     /*** URL parsing ***/
     var url_hash = window.location.hash.slice(1).split('/');
     if (url_hash.length == 3) {
