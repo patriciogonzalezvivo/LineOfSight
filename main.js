@@ -1,5 +1,6 @@
 // Author: @patriciogv 2015
-
+var samplesTotal = 300;
+var samplesStep = 20;
 var satellites = [
                 {     
                     name: 'ISS',
@@ -86,7 +87,7 @@ function init() {
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", satellites);
+    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal);
 }
 
 window.setTimeout( function() {
@@ -98,9 +99,6 @@ window.setTimeout( function() {
     } else {
         console.log('Floating point texture support');
     }
-
-    var samplesTotal = 98*6;
-    var samplesStep = 60/6; // sec
 
     var tracks = [];
 
@@ -129,7 +127,7 @@ window.setTimeout( function() {
     //     }
     // }
     // ctx.putImageData(imageData, 0, 0);
-    // scene.styles.orbit.shaders.uniforms.u_lut = canvas.toDataURL();
+    // scene.styles.orbit.shaders.uniforms.u_data = canvas.toDataURL();
     // scene.rebuild();
 
     // // Using WebGL
@@ -139,7 +137,7 @@ window.setTimeout( function() {
     //      - http://nullprogram.com/blog/2014/06/29/
     
     var uniforms = {};
-    uniforms.u_lut = {};
+    uniforms.u_data = {};
 
     var pixels = new Float32Array(width*height*4);
     for (var y = 0; y < height; y++) {
@@ -152,7 +150,7 @@ window.setTimeout( function() {
             pixels[index+3] = 1;
         }
     }
-    var texture = scene.styles.orbit.program.uniforms.u_lut;
+    var texture = scene.styles.orbit.program.uniforms.u_data;
     scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal,height,samplesStep];
     gl.activeTexture(gl.TEXTURE0);
     // gl.bindTexture(gl.TEXTURE_2D, 0);

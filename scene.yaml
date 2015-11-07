@@ -6,7 +6,7 @@ sources:
         url:  //vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-DFFH1UM
     orbits:
         type: GeoJSON
-        url: data/orbit.geojson
+        url: data/orbits.geojson
 cameras:
     perspective:
         type: flat
@@ -237,25 +237,36 @@ styles:
         blend: inlay
         shaders:
             uniforms:
-                u_lut: imgs/lut.png
+                u_data: data/orbits.png
                 u_param: [0,0,0]
             blocks:
                 global: |
                     float pulse(float x, float p, float w){
                         return (smoothstep(p-w*.5,p,x) + smoothstep(p+w*.5,p,x))-1.0;
                     }
+
+                    vec2 getPosFor(float index, float time) {
+                        float offsetX = (time/u_param.z);
+                        vec2 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xy;
+                        vec2 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xy;
+                        return mix(posA,posB,fract(offsetX));
+                    }
                 color: |
                     vec2 merc = u_map_position.xy+v_position.xy;
                     vec2 latlon = vec2(y2lat_m(merc.y),x2lon_m(merc.x));
                     vec2 uv = (latlon.yx/vec2(180.,90.)+1.)*.5;
 
-                    float offset = (u_time/u_param.z);
                     float index = (color.r)*255.+.5;
-                    vec2 posA = texture2D(u_lut,vec2(offset/u_param.x,1.-index/u_param.y)).xy;
-                    vec2 posB = texture2D(u_lut,vec2((offset+1.)/u_param.x,1.-index/u_param.y)).xy;
-                    float spot = 1.0-step(.005/max(u_map_position.z*2.,1.),distance(uv,mix(posA,posB,fract(offset))));
+                    vec2 pos = getPosFor(index,u_time);
+                    float dist = distance(uv,pos);
+                    float spot = 1.0-step(.005/max(u_map_position.z*2.,1.),dist);
                     color.rgb = mix(vec3(1.,1.,0.), vec3(1.,0.0,0.0), spot);
                     color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
+
+                    //pos = ((pos*2.)-1.)*vec2(180.,90.);
+                    //pos = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
+                    //color.rg = (merc-pos)*.00001;
+                    //color.b = 0.0;
 layers:
     earth:
         data: { source: osm }
@@ -285,7 +296,6 @@ layers:
             orbit:
                 order: 10
                 color: function(){ return [(feature.id)/255, feature.id/255, feature.id/255]; }
-                #color: Style.color.pseudoRandomColor()
                 width: 50px
             text:
                 order: 11
