@@ -230,7 +230,7 @@ styles:
                     float lon2x_m (float lon) { return deg2rad(lon)*EARTH_RADIUS; }
     orbit:
         base: lines
-        mix: geometry-projection
+        mix: [geometry-projection, functions-map, shapes-cross]
         lighting: false
         texcoords: true
         animated: true
@@ -258,15 +258,15 @@ styles:
 
                     float index = (color.r)*255.+.5;
                     vec2 pos = getPosFor(index,u_time);
-                    float dist = distance(uv,pos);
-                    float spot = 1.0-step(.005/max(u_map_position.z*2.,1.),dist);
-                    color.rgb = mix(vec3(1.,1.,0.), vec3(1.,0.0,0.0), spot);
-                    color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
 
-                    //pos = ((pos*2.)-1.)*vec2(180.,90.);
-                    //pos = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
-                    //color.rg = (merc-pos)*.00001;
-                    //color.b = 0.0;
+                    pos = ((pos*2.)-1.)*vec2(180.,90.);
+                    pos = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
+                    vec2 st = (merc-pos)*.0000001;
+
+                    st *= map(u_map_position.z,4.,22.,1.,1000.);//
+                    float spot = cross(st+.5,.05,.01);
+                    color.rgb = mix(vec3(1.,1.,0.), vec3(.0,.0,.0), spot);
+                    color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
 layers:
     earth:
         data: { source: osm }
