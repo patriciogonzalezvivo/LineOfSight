@@ -17,5 +17,5 @@ for filename in os.listdir(folder):
     f.close()
 
 with open("satellites.json", "w") as outfile:
-    outfile.write(json.dumps({'orbits' : data, outfile, indent=4))
+    outfile.write(json.dumps(data, outfile, indent=4))
 outfile.close()

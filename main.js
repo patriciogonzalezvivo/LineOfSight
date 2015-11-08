@@ -179,92 +179,103 @@ function init() {
     // Scene initialized
     layer.on('init', function() {
         initOrbit();
+        // Get the geoJSON to add the orbit to
+        // getHttp("data/satellites.json", function (err, res) {
+        //     if (err) {
+        //         console.error(err);
+        //     }
+        //     // Parse the geoJSON
+        //     var data = JSON.parse(res);
+        //     // console.log(data);
+        //     satellites = data;
+        //     initOrbit();
+        // });
     });
     layer.addTo(map);
 }
 
 function initOrbit() {
     addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, 120);
-}
 
-window.setTimeout( function() {
-    var gl = scene.gl;
-    var floatTextures = gl.getExtension('OES_texture_float');
-    if (!floatTextures) {
-        console.log('NO FLOATING POINT TEXTURE SUPPORT');
-        return;
-    } else {
-        console.log('Floating point texture support');
-    }
-
-    var tracks = [];
-
-    for (var sat of satellites) {
-        // Generate the orbit for each satellite
-        tracks.push(getOrbitTrack(sat,samplesStep,samplesTotal));
-    }
-    
-    var width = samplesTotal;
-    var height = satellites.length;
-
-    // // Using Canvas
-    // var canvas = document.createElement("canvas");
-    // canvas.height = height;
-    // canvas.width = width;
-    // var ctx = canvas.getContext('2d');
-    // var imageData = ctx.getImageData(0, 0, width, height);
-    // var data = imageData.data;
-    // for (var y = 0; y < height; y++) {
-    //     for (var x = 0; x < width; x++) {
-    //         var index = (y*width+x)*4;
-    //         data[index] = 255;
-    //         data[index+1] = 0;
-    //         data[index+2] = 0;
-    //         data[index+3] = 255;
-    //     }
-    // }
-    // ctx.putImageData(imageData, 0, 0);
-    // scene.styles.orbit.shaders.uniforms.u_data = canvas.toDataURL();
-    // scene.rebuild();
-
-    // // Using WebGL
-    // Usefull resources: 
-    //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-    //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
-    //      - http://nullprogram.com/blog/2014/06/29/
-    
-    var uniforms = {};
-    uniforms.u_data = {};
-
-    var pixels = new Float32Array(width*height*4);
-    for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-            var index = (y*width+x)*4;
-            var data = [ .5+(tracks[y][x].ln/180)*.5, .5+(tracks[y][x].lt/90)*.5];
-            pixels[index] = data[0];
-            pixels[index+1] = data[1];
-            pixels[index+2] = 0;
-            pixels[index+3] = 1;
+    window.setTimeout( function() {
+        var gl = scene.gl;
+        var floatTextures = gl.getExtension('OES_texture_float');
+        if (!floatTextures) {
+            console.log('NO FLOATING POINT TEXTURE SUPPORT');
+            return;
+        } else {
+            console.log('Floating point texture support');
         }
-    }
-    var texture = scene.styles.orbit.program.uniforms.u_data;
-    scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal,height,samplesStep];
-    gl.activeTexture(gl.TEXTURE0);
-    // gl.bindTexture(gl.TEXTURE_2D, 0);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(
-        gl.TEXTURE_2D, // target
-        0, // mip level
-        gl.RGBA, // internal format
-        width, height, // width and height
-        0, // border
-        gl.RGBA, //format
-        gl.FLOAT, // type
-        pixels // texture data
-    );
-    // gl.bindTexture(gl.TEXTURE_2D, null);
-    scene.rebuild();
-},5000);
+
+        var tracks = [];
+
+        for (var sat of satellites) {
+            // Generate the orbit for each satellite
+            tracks.push(getOrbitTrack(sat,samplesStep,samplesTotal));
+        }
+        
+        var width = samplesTotal;
+        var height = satellites.length;
+
+        // // Using Canvas
+        // var canvas = document.createElement("canvas");
+        // canvas.height = height;
+        // canvas.width = width;
+        // var ctx = canvas.getContext('2d');
+        // var imageData = ctx.getImageData(0, 0, width, height);
+        // var data = imageData.data;
+        // for (var y = 0; y < height; y++) {
+        //     for (var x = 0; x < width; x++) {
+        //         var index = (y*width+x)*4;
+        //         data[index] = 255;
+        //         data[index+1] = 0;
+        //         data[index+2] = 0;
+        //         data[index+3] = 255;
+        //     }
+        // }
+        // ctx.putImageData(imageData, 0, 0);
+        // scene.styles.orbit.shaders.uniforms.u_data = canvas.toDataURL();
+        // scene.rebuild();
+
+        // // Using WebGL
+        // Usefull resources: 
+        //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
+        //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
+        //      - http://nullprogram.com/blog/2014/06/29/
+        
+        var uniforms = {};
+        uniforms.u_data = {};
+
+        var pixels = new Float32Array(width*height*4);
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                var index = (y*width+x)*4;
+                var data = [ .5+(tracks[y][x].ln/180)*.5, .5+(tracks[y][x].lt/90)*.5];
+                pixels[index] = data[0];
+                pixels[index+1] = data[1];
+                pixels[index+2] = 0;
+                pixels[index+3] = 1;
+            }
+        }
+        var texture = scene.styles.orbit.program.uniforms.u_data;
+        scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal,height,samplesStep];
+        gl.activeTexture(gl.TEXTURE0);
+        // gl.bindTexture(gl.TEXTURE_2D, 0);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texImage2D(
+            gl.TEXTURE_2D, // target
+            0, // mip level
+            gl.RGBA, // internal format
+            width, height, // width and height
+            0, // border
+            gl.RGBA, //format
+            gl.FLOAT, // type
+            pixels // texture data
+        );
+        // gl.bindTexture(gl.TEXTURE_2D, null);
+        scene.rebuild();
+    },5000);
+}
