@@ -109,10 +109,10 @@ map = (function () {
                         // console.log(feature.properties);
                         var obj = JSON.parse(JSON.stringify(feature.properties));
                         label = "";
-                        for (var x in feature.properties) {
-                            if (x === 'kind') continue;
-                            var val = feature.properties[x]
-                            label += "<span class='labelLine' key="+x+" value="+val+" onclick='setValuesFromSpan(this)'>"+x+" : "+val+"</span><br>"
+                        for (var key in feature.properties) {
+                            if (key === 'kind' || key === 'id') continue;
+                            var val = feature.properties[key]
+                            label += "<span class='labelLine' key="+key+" value="+val+" onclick='setValuesFromSpan(this)'>"+key+" : "+val+"</span><br>"
                         }
                     }
 
@@ -178,18 +178,18 @@ map = (function () {
 function init() {
     // Scene initialized
     layer.on('init', function() {
-        initOrbit();
+        // initOrbit();
         // Get the geoJSON to add the orbit to
-        // getHttp("data/satellites.json", function (err, res) {
-        //     if (err) {
-        //         console.error(err);
-        //     }
-        //     // Parse the geoJSON
-        //     var data = JSON.parse(res);
-        //     // console.log(data);
-        //     satellites = data;
-        //     initOrbit();
-        // });
+        getHttp("data/satellites.json", function (err, res) {
+            if (err) {
+                console.error(err);
+            }
+            // Parse the geoJSON
+            var data = JSON.parse(res);
+            // console.log(data);
+            satellites = data;
+            initOrbit();
+        });
     });
     layer.addTo(map);
 }

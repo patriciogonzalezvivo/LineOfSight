@@ -361,7 +361,7 @@ layers:
                 font:
                     fill: black
                     family: ['Jura', Helvetica]
-                    size: 14px
+                    size: 10px
                     weight: 100
                     stroke: { color: white , width: 3.5 }
         # show:
