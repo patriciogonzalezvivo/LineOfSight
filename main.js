@@ -87,7 +87,7 @@ function init() {
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal);
+    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, 120);
 }
 
 window.setTimeout( function() {

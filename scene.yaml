@@ -11,6 +11,25 @@ cameras:
     perspective:
         type: flat
 styles:
+    functions-aastep:
+        shaders:
+            extensions: OES_standard_derivatives
+            blocks:
+                global: |
+                    // AntiAliased Step function
+                    //=============================
+                    float aastep(float threshold, float value) {
+                        #ifdef TANGRAM_FRAGMENT_SHADER
+                            #ifdef TANGRAM_EXTENSION_OES_standard_derivatives
+                                float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
+                                return smoothstep(threshold-afwidth, threshold+afwidth, value);
+                            #else
+                                return step(threshold, value);
+                            #endif  
+                        #else
+                            return step(threshold, value);
+                        #endif
+                    }
     functions-map:
         shaders:
             defines:
@@ -88,6 +107,37 @@ styles:
                     float cross (vec2 st, float size, float width) {
                         return  clamp(  rect(st, vec2(size*0.5,width*0.125)) +
                                         rect(st, vec2(width*0.125,size*0.5)),0.,1.);
+                    }
+    shapes-polygons:
+        mix: functions-aastep
+        shaders:
+            defines:
+                PI: 3.14159265358979323846
+                TWO_PI: 6.283185307
+            blocks:
+                global: |
+                    // get distance field of a polygon in the center
+                    // where N is the number of sides of it
+                    // ================================
+                    float shapeDF (vec2 st, int N) {
+                        st = st *2.-1.;
+                        float a = atan(st.x,st.y)+PI;
+                        float r = TWO_PI/float(N);
+                        return cos(floor(.5+a/r)*r-a)*length(st);
+                    }
+                    
+                    // draw a polygon in the center
+                    // where N is the number of sides of it
+                    // ================================
+                    float shape (vec2 st, int N, float width) {
+                        return 1.0-aastep(width,shapeDF(st,N));
+                    }
+
+                    // draw the border of a polygon in the center
+                    // where N is the number of sides of it
+                    // ================================
+                    float shapeBorder (vec2 st, int N, float size, float width) {
+                        return shape(st,N,size)-shape(st,N,size-width);
                     }
     space-tile:
         shaders:
@@ -230,11 +280,11 @@ styles:
                     float lon2x_m (float lon) { return deg2rad(lon)*EARTH_RADIUS; }
     orbit:
         base: lines
-        mix: [geometry-projection, functions-map, shapes-cross]
+        mix: [geometry-projection, functions-map, shapes-polygons]
         lighting: false
         texcoords: true
         animated: true
-        blend: inlay
+        blend: overlay
         shaders:
             uniforms:
                 u_data: data/orbits.png
@@ -263,8 +313,8 @@ styles:
                     pos = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
                     vec2 st = (merc-pos)*.0000001;
 
-                    st *= map(u_map_position.z,4.,22.,1.,1000.);//
-                    float spot = cross(st+.5,.05,.01);
+                    st *= 1.+pow(map(u_map_position.z,2.,22.,0.,1.),2.0)*1000.;
+                    float spot = shapeBorder(st+.5,3,.1,.06);
                     color.rgb = mix(vec3(1.,1.,0.), vec3(.0,.0,.0), spot);
                     color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
 layers:
