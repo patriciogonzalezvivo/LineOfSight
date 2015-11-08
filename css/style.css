@@ -24,3 +24,30 @@ body {
     font-family: 'Jura', Helvetica, Arial, sans-serif;
     color: black;
 }
+
+.label {
+    /*width: 200px;*/
+    /*margin-left: -100px;*/
+    position: absolute;
+    z-index: 1000;
+    text-align: left;
+    margin: 0px;
+    background:rgba(3,3,3,0.4);
+    padding: 2px;
+    /*text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;*/
+    /*word-wrap: break-word;*/
+}
+.labelInner {
+    padding: 3px 0px;
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: white;
+    opacity: 10.0;
+    margin: 0px;
+}
+.labelLine {
+    /*border: 2px solid gold;*/
+}
+.labelLine:hover {
+    border: 2px solid gold;
+}

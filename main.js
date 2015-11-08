@@ -48,6 +48,7 @@ map = (function () {
         trackResize: true,
         keyboard: false
     });
+
     // Tangram Layer
     var layer = Tangram.leafletLayer({
         scene: 'scene.yaml',
@@ -57,6 +58,96 @@ map = (function () {
     window.layer = layer;
     var scene = layer.scene;
     window.scene = scene;
+
+    var keytext = "name";
+    window.keytext = keytext;
+    var valuetext = "ISS";
+    window.valuetext = valuetext;
+
+    function updateKey(value) {
+        keytext = value;
+        scene.config.layers["orbits"].properties.key_text = value;
+        scene.rebuild();
+        updateURL();
+    }
+
+    function updateValue(value) {
+        valuetext = value;
+        scene.config.layers["orbits"].properties.value_text = value;
+        scene.rebuild();
+        updateURL();
+    }
+
+    // var scene.picking = false;
+    // Feature selection
+    function initFeatureSelection () {
+        // Selection info shown on hover
+        var selection_info = document.createElement('div');
+        selection_info.setAttribute('class', 'label');
+        selection_info.style.display = 'block';
+        selection_info.style.zindex = 1000;
+
+        // Show selected feature on hover
+        map.getContainer().addEventListener('mousemove', function (event) {
+            var pixel = { x: event.clientX, y: event.clientY };
+
+            scene.getFeatureAt(pixel).then(function(selection) {    
+                if (!selection) {
+                    return;
+                }
+                var feature = selection.feature;
+                if (feature != null) {
+                    // console.log("selection map: " + JSON.stringify(feature));
+
+                    var label = '';
+                    if (feature.properties != null) {
+                        // console.log(feature.properties);
+                        var obj = JSON.parse(JSON.stringify(feature.properties));
+                        label = "";
+                        for (var x in feature.properties) {
+                            if (x === 'kind') continue;
+                            var val = feature.properties[x]
+                            label += "<span class='labelLine' key="+x+" value="+val+" onclick='setValuesFromSpan(this)'>"+x+" : "+val+"</span><br>"
+                        }
+                    }
+
+                    if (label != '') {
+                        selection_info.style.left = (pixel.x + 5) + 'px';
+                        selection_info.style.top = (pixel.y + 15) + 'px';
+                        selection_info.innerHTML = '<span class="labelInner">' + label + '</span>';
+                        map.getContainer().appendChild(selection_info);
+                    }
+                    else if (selection_info.parentNode != null) {
+                        selection_info.parentNode.removeChild(selection_info);
+                    }
+                }
+                else if (selection_info.parentNode != null) {
+                    selection_info.parentNode.removeChild(selection_info);
+                }
+            });
+
+            // Don't show labels while panning
+            if (scene.panning == true) {
+                if (selection_info.parentNode != null) {
+                    selection_info.parentNode.removeChild(selection_info);
+                }
+            }
+        });
+    
+        // // capture popup clicks
+        // // scene.labelLine.addEventListener('click', function (event) {
+        // //     return true;
+        // // });
+
+        // // toggle popup picking state
+        // map.getContainer().addEventListener('click', function (event) {
+        //     picking = !picking;
+        // });
+        // // toggle popup picking state
+        // map.getContainer().addEventListener('drag', function (event) {
+        //     picking = false;
+        // });
+    }
 
     map.setView(map_start_location.slice(0, 2), map_start_location[2]);
     var hash = new L.Hash(map);
@@ -73,6 +164,7 @@ map = (function () {
     /***** Render loop *****/
     window.addEventListener('load', function () {
         init();
+        initFeatureSelection();
     });
 
     return map;

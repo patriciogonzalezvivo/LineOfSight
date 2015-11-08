@@ -342,7 +342,15 @@ layers:
                 color: gray
     orbit:
         data: { source: orbits }
+        properties: 
+            key_text: ""
+            value_text: ""
         draw:
+            lines:
+                interactive: true
+                order: -1
+                color: [.5, .5, .5, .0]
+                width: 10px
             orbit:
                 order: 10
                 color: function(){ return [(feature.id)/255, feature.id/255, feature.id/255]; }
@@ -356,6 +364,25 @@ layers:
                     size: 14px
                     weight: 100
                     stroke: { color: white , width: 3.5 }
+        # show:
+        #     filter: |
+        #         function () {
+        #             return feature[properties.key_text] && feature[properties.key_text].toLowerCase().indexOf(properties.value_text.toLowerCase()) > -1;
+        #         }
+        #     draw:
+        #         orbit:
+        #             order: 10
+        #             color: function(){ return [(feature.id)/255, feature.id/255, feature.id/255]; }
+        #             width: 50px
+        #         text:
+        #             order: 11
+        #             offset: [0px, 8px]
+        #             font:
+        #                 fill: black
+        #                 family: ['Jura', Helvetica]
+        #                 size: 14px
+        #                 weight: 100
+        #                 stroke: { color: white , width: 3.5 }
     roads:
         data: { source: osm, layer: roads }
         filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
