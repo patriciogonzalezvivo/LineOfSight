@@ -288,7 +288,7 @@ styles:
         shaders:
             uniforms:
                 u_data: data/orbits.png
-                u_param: [0,0,0]
+                u_param: [0,0,0,0]
             blocks:
                 global: |
                     float pulse(float x, float p, float w){
@@ -296,7 +296,7 @@ styles:
                     }
 
                     vec2 getPosFor(float index, float time) {
-                        float offsetX = (time/u_param.z);
+                        float offsetX = ((time+u_param.w)/u_param.z);
                         vec2 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xy;
                         vec2 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xy;
                         vec2 dist = posB-posA;

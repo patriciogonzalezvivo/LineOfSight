@@ -29,14 +29,17 @@ for filename in os.listdir(folder):
         elif sat['name'].endswith(' [X]'):
             sat['state'] = "extended mission";
 
-        # if "[-]" in sat['name']: continue
-        # if "[P]" in sat['name']: continue
-        # if "[S]" in sat['name']: continue
-        # if "[B]" in sat['name']: continue
+        if "[-]" in sat['name']: continue
+        if "[P]" in sat['name']: continue
+        if "[S]" in sat['name']: continue
+        if "[B]" in sat['name']: continue
         if sat['name'].endswith(' [+]') or sat['name'].endswith(' [-]') or sat['name'].endswith(' [P]') or sat['name'].endswith(' [B]') or sat['name'].endswith(' [S]') or sat['name'].endswith(' [X]'):
             sat['name'] = sat['name'][:-4]
 
-        data[ sat['name'] ] = sat;
+        if sat['name'] in data:
+            data[ sat['name'] ]['type'] = sat['type'] + ', ' + data[ sat['name'] ]['type']
+        else: 
+            data[ sat['name'] ] = sat
     f.close()
 
 print(str(len(data)) + " satellites");

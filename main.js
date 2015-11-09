@@ -1,6 +1,8 @@
 // Author: @patriciogv 2015
 var samplesTotal = 300;
 var samplesStep = 20;
+var samplesOffset = 120;
+var loadAll = true;
 var satellites = [
                 {     
                     name: 'ISS',
@@ -138,20 +140,6 @@ map = (function () {
                 }
             }
         });
-    
-        // // capture popup clicks
-        // // scene.labelLine.addEventListener('click', function (event) {
-        // //     return true;
-        // // });
-
-        // // toggle popup picking state
-        // map.getContainer().addEventListener('click', function (event) {
-        //     picking = !picking;
-        // });
-        // // toggle popup picking state
-        // map.getContainer().addEventListener('drag', function (event) {
-        //     picking = false;
-        // });
     }
 
     map.setView(map_start_location.slice(0, 2), map_start_location[2]);
@@ -178,24 +166,27 @@ map = (function () {
 function init() {
     // Scene initialized
     layer.on('init', function() {
-        initOrbit();
-        // Get the geoJSON to add the orbit to
-        // getHttp("data/satellites.json", function (err, res) {
-        //     if (err) {
-        //         console.error(err);
-        //     }
-        //     // Parse the geoJSON
-        //     var data = JSON.parse(res);
-        //     // console.log(data);
-        //     satellites = data;
-        //     initOrbit();
-        // });
+        if (loadAll) {
+            // Get the geoJSON to add the orbit to
+            getHttp("data/satellites.json", function (err, res) {
+                if (err) {
+                    console.error(err);
+                }
+                // Parse the geoJSON
+                var data = JSON.parse(res);
+                // console.log(data);
+                satellites = data;
+                initOrbit();
+            });
+        } else {
+            initOrbit();    
+        }
     });
     layer.addTo(map);
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, 120);
+    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, samplesOffset);
 
     window.setTimeout( function() {
         var gl = scene.gl;
@@ -206,39 +197,11 @@ function initOrbit() {
         } else {
             console.log('Floating point texture support');
         }
-
-        var tracks = [];
-
-        for (var sat of satellites) {
-            // Generate the orbit for each satellite
-            tracks.push(getOrbitTrack(sat,samplesStep,samplesTotal));
-        }
         
         var width = samplesTotal;
         var height = satellites.length;
 
-        // // Using Canvas
-        // var canvas = document.createElement("canvas");
-        // canvas.height = height;
-        // canvas.width = width;
-        // var ctx = canvas.getContext('2d');
-        // var imageData = ctx.getImageData(0, 0, width, height);
-        // var data = imageData.data;
-        // for (var y = 0; y < height; y++) {
-        //     for (var x = 0; x < width; x++) {
-        //         var index = (y*width+x)*4;
-        //         data[index] = 255;
-        //         data[index+1] = 0;
-        //         data[index+2] = 0;
-        //         data[index+3] = 255;
-        //     }
-        // }
-        // ctx.putImageData(imageData, 0, 0);
-        // scene.styles.orbit.shaders.uniforms.u_data = canvas.toDataURL();
-        // scene.rebuild();
-
-        // // Using WebGL
-        // Usefull resources: 
+        // Usefull documentation: 
         //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
         //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
         //      - http://nullprogram.com/blog/2014/06/29/
@@ -250,7 +213,7 @@ function initOrbit() {
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
                 var index = (y*width+x)*4;
-                var data = [ .5+(tracks[y][x].ln/180)*.5, .5+(tracks[y][x].lt/90)*.5];
+                var data = [ .5+(satellites[y].track[x].ln/180)*.5, .5+(satellites[y].track[x].lt/90)*.5];
                 pixels[index] = data[0];
                 pixels[index+1] = data[1];
                 pixels[index+2] = 0;
@@ -258,7 +221,7 @@ function initOrbit() {
             }
         }
         var texture = scene.styles.orbit.program.uniforms.u_data;
-        scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal,height,samplesStep];
+        scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, height, samplesStep, samplesOffset];
         gl.activeTexture(gl.TEXTURE0);
         // gl.bindTexture(gl.TEXTURE_2D, 0);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -278,7 +241,9 @@ function initOrbit() {
         // gl.bindTexture(gl.TEXTURE_2D, null);
         scene.rebuild();
 
-        scene.config.layers["orbit"].draw.text.visible = true;
-        scene.rebuild();
-    },2000);
+        window.setTimeout( function() {
+            scene.config.layers["orbit"].draw.text.visible = true;
+            scene.rebuild();
+        }, 5000);
+    },3000);
 }
