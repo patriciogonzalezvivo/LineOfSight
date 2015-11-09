@@ -280,5 +280,5 @@ function initOrbit() {
 
         scene.config.layers["orbit"].draw.text.visible = true;
         scene.rebuild();
-    },5000);
+    },2000);
 }

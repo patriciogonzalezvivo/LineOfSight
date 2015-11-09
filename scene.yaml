@@ -318,7 +318,7 @@ styles:
                     st += .5;
                     float spot = shapeBorder(st,3,.1,.06);
                     color.rgb = mix(vec3(1.,1.,0.), vec3(.0,.0,.0), spot);
-                    color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
+                    color.a = spot + pulse(v_texcoord.x,.5,.03)*.5;
 layers:
     earth:
         data: { source: osm }
@@ -356,7 +356,7 @@ layers:
             orbit:
                 order: 10
                 color: function(){ return [(feature.id)/255, feature.id/255, feature.id/255]; }
-                width: 50px
+                width: [[1,50px],[9,50px],[22,1000px]]
             text:
                 order: 11
                 offset: [0px, 8px]
