@@ -299,6 +299,7 @@ styles:
                         float offsetX = (time/u_param.z);
                         vec2 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xy;
                         vec2 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xy;
+                        vec2 dist = posB-posA;
                         return mix(posA,posB,fract(offsetX));
                     }
                 color: |
@@ -309,12 +310,13 @@ styles:
                     float index = (color.r)*255.+.5;
                     vec2 pos = getPosFor(index,u_time);
 
-                    pos = ((pos*2.)-1.)*vec2(180.,90.);
-                    pos = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
-                    vec2 st = (merc-pos)*.0000001;
+                    pos.xy = ((pos.xy*2.)-1.)*vec2(180.,90.);
+                    pos.xy = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
+                    vec2 st = (merc-pos.xy)*.0000001;
 
                     st *= 1.+pow(map(u_map_position.z,2.,22.,0.,1.),2.0)*1000.;
-                    float spot = shapeBorder(st+.5,3,.1,.06);
+                    st += .5;
+                    float spot = shapeBorder(st,3,.1,.06);
                     color.rgb = mix(vec3(1.,1.,0.), vec3(.0,.0,.0), spot);
                     color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
 layers:
@@ -358,6 +360,7 @@ layers:
             text:
                 order: 11
                 offset: [0px, 8px]
+                visible: false
                 font:
                     fill: black
                     family: ['Jura', Helvetica]

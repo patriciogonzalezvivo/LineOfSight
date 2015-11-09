@@ -178,18 +178,18 @@ map = (function () {
 function init() {
     // Scene initialized
     layer.on('init', function() {
-        // initOrbit();
+        initOrbit();
         // Get the geoJSON to add the orbit to
-        getHttp("data/satellites.json", function (err, res) {
-            if (err) {
-                console.error(err);
-            }
-            // Parse the geoJSON
-            var data = JSON.parse(res);
-            // console.log(data);
-            satellites = data;
-            initOrbit();
-        });
+        // getHttp("data/satellites.json", function (err, res) {
+        //     if (err) {
+        //         console.error(err);
+        //     }
+        //     // Parse the geoJSON
+        //     var data = JSON.parse(res);
+        //     // console.log(data);
+        //     satellites = data;
+        //     initOrbit();
+        // });
     });
     layer.addTo(map);
 }
@@ -276,6 +276,9 @@ function initOrbit() {
             pixels // texture data
         );
         // gl.bindTexture(gl.TEXTURE_2D, null);
+        scene.rebuild();
+
+        scene.config.layers["orbit"].draw.text.visible = true;
         scene.rebuild();
     },5000);
 }
