@@ -252,21 +252,6 @@ function initOrbit() {
         }
         typesDOM.innerHTML = typesDOM.innerHTML+ '<input type="checkbox" name="checkbox-option" id="checkbox-'+typeName+'" class="hide-checkbox" value="'+typeName+'" '+stt+'><label for="checkbox-'+typeName+'">'+typeName+'</label>';
     }
-    document.getElementById("types").addEventListener("click", function( event ) {
-        var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
-        var active_types = "";
-        for (var check in checks) {
-            if (check.indexOf('checkbox-')>-1) {
-                if (checks[check].checked) {
-                    console.log(checks[check]);
-                    active_types = checks[check].value + " " + active_types;
-                }   
-            }
-        }
-        console.log(active_types);
-        scene.config.layers.orbit.properties.active_types = active_types;
-        scene.rebuild();
-    }, false);
 
     window.setTimeout( function() {
         var gl = scene.gl;
@@ -320,10 +305,24 @@ function initOrbit() {
         // gl.bindTexture(gl.TEXTURE_2D, null);
         scene.rebuild();
 
-        // window.setTimeout( function() {
-        //     scene.config.layers["orbit-labels"].draw.text.visible = true;
-        //     scene.rebuild();
-        // }, 5000);
+        window.setTimeout( function() {
+            // scene.config.layers["orbit-labels"].draw.text.visible = true;
+            // scene.rebuild();
+
+            document.getElementById("types").addEventListener("click", function( event ) {
+                var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
+                var active_types = "";
+                for (var check in checks) {
+                    if (check.indexOf('checkbox-')>-1) {
+                        if (checks[check].checked) {
+                            active_types = checks[check].value + " " + active_types;
+                        }   
+                    }
+                }
+                scene.config.layers.orbit.properties.active_types = active_types;
+                scene.rebuild();
+            }, false);
+        }, 5000);
     },3000);
 }
 
