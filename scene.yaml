@@ -9,7 +9,7 @@ sources:
         url: data/orbits.geojson
 cameras:
     perspective:
-        type: flat
+        type: perspective
 styles:
     functions-aastep:
         shaders:
@@ -324,23 +324,23 @@ layers:
         data: { source: osm }
         draw:
             earth:
-                order: 0
+                order: 1
                 color: '#555'
             spline:
-                order: 3
+                order: 4
                 color: white
                 width: [[1,0px],[5,1.5px]]
     water:
         data: { source: osm }
         draw:
             water:
-                order: 1
+                order: 2
                 color: '#aaa'
     landuse:
         data: { source: osm }
         draw:
             area:
-                order: 2
+                order: 3
                 color: gray
     orbit:
         data: { source: orbits }
@@ -350,15 +350,21 @@ layers:
         draw:
             lines:
                 interactive: true
-                order: -1
+                order: 0
                 color: [.5, .5, .5, .0]
                 width: 10px
+                extrude: function () { return feature.height * 1000; }
             orbit:
                 order: 10
                 color: function(){ return [(feature.id)/255, feature.id/255, feature.id/255]; }
                 width: [[1,50px],[9,50px],[22,1000px]]
+                extrude: function () { return feature.height * 1000; }
+    orbit-labels:
+        data: { source: orbits }    
+        filter: { $zoom: { max: 10 } }
+        draw:
             text:
-                order: 11
+                order: 3
                 offset: [0px, 8px]
                 visible: false
                 font:

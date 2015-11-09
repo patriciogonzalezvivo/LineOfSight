@@ -2,7 +2,8 @@
 var samplesTotal = 300;
 var samplesStep = 20;
 var samplesOffset = 120;
-var loadAll = true;
+var loadAll = false;
+
 var satellites = [
                 {     
                     name: 'ISS',
@@ -213,10 +214,9 @@ function initOrbit() {
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
                 var index = (y*width+x)*4;
-                var data = [ .5+(satellites[y].track[x].ln/180)*.5, .5+(satellites[y].track[x].lt/90)*.5];
-                pixels[index] = data[0];
-                pixels[index+1] = data[1];
-                pixels[index+2] = 0;
+                pixels[index] = .5+(satellites[y].track[x].ln/180)*.5;
+                pixels[index+1] = .5+(satellites[y].track[x].lt/90)*.5;
+                pixels[index+2] = satellites[y].track[x].h/1000;
                 pixels[index+3] = 1;
             }
         }
@@ -242,7 +242,7 @@ function initOrbit() {
         scene.rebuild();
 
         window.setTimeout( function() {
-            scene.config.layers["orbit"].draw.text.visible = true;
+            scene.config.layers["orbit-labels"].draw.text.visible = true;
             scene.rebuild();
         }, 5000);
     },3000);
