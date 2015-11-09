@@ -1,8 +1,9 @@
 // Author: @patriciogv 2015
 var samplesTotal = 300;
 var samplesStep = 20;
-var samplesOffset = 120;
+var timeOffset = 120;
 var loadAll = true;
+var startTime = 0;
 
 var types = { 
                 amateur: false, 
@@ -129,20 +130,6 @@ map = (function () {
     var valuetext = "ISS";
     window.valuetext = valuetext;
 
-    function updateKey(value) {
-        keytext = value;
-        scene.config.layers["orbits"].properties.key_text = value;
-        scene.rebuild();
-        updateURL();
-    }
-
-    function updateValue(value) {
-        valuetext = value;
-        scene.config.layers["orbits"].properties.value_text = value;
-        scene.rebuild();
-        updateURL();
-    }
-
     // Feature selection
     function initFeatureSelection () {
         // Selection info shown on hover
@@ -239,7 +226,8 @@ function init() {
 }
 
 function initOrbit() {
-    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, samplesOffset);
+    startTime = new Date();
+    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, timeOffset);
 
     var typesDOM = document.getElementById("types");
     var typesNames = Object.keys(types);
@@ -285,7 +273,6 @@ function initOrbit() {
             }
         }
         var texture = scene.styles.orbit.program.uniforms.u_data;
-        scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, height, samplesStep, samplesOffset];
         gl.activeTexture(gl.TEXTURE0);
         // gl.bindTexture(gl.TEXTURE_2D, 0);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -303,11 +290,11 @@ function initOrbit() {
             pixels // texture data
         );
         // gl.bindTexture(gl.TEXTURE_2D, null);
-        scene.rebuild();
+        reloadTangram();
 
         window.setTimeout( function() {
             // scene.config.layers["orbit-labels"].draw.text.visible = true;
-            // scene.rebuild();
+            // reloadTangram();
 
             document.getElementById("types").addEventListener("click", function( event ) {
                 var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
@@ -320,13 +307,15 @@ function initOrbit() {
                     }
                 }
                 scene.config.layers.orbit.properties.active_types = active_types;
-                scene.rebuild();
+                reloadTangram()
             }, false);
         }, 5000);
     },3000);
 }
 
-// [].forEach.call( document.querySelectorAll('.hide-checkbox'), function(element) {
-//     console.log(element);
-//     element.style.display = 'none';
-// });
+function reloadTangram() {
+    var now = new Date();
+    var delta = now.getTime() - startTime.getTime();
+    scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, satellites.length, samplesStep, timeOffset + delta/1000];
+    scene.rebuild();
+}
