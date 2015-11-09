@@ -13,6 +13,51 @@ body {
     z-index: 0;
 }
 
+#types {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    position: absolute; 
+    top: 10px; 
+    right: 10px;
+    background: rgba(3,3,3,0.4);
+    padding: 2px;
+    z-index: 100;
+    width: 100px;
+    border: 1px solid rgba(255,255,255,0.7);
+}
+
+#types-title {
+    color: white;
+    margin: 5px;
+}
+
+.hide-checkbox {
+    width: 0px;
+    height: 0px;
+    margin: 0px;
+    padding: 0px;
+    visibility: hidden;
+}
+
+.hide-checkbox + label {
+    font-family: 'Jura', Helvetica, Arial, sans-serif;
+    display: block;
+    float: left;
+    width: 100%;
+    padding: 2px 0;
+    text-align: center;
+    color: white;
+    background-color: rgba(0,0,0,0.0);
+    -webkit-transition: background-color 0.3s ease-in-out;
+    -moz-transition: background-color 0.3s ease-in-out;
+    -o-transition: background-color 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.hide-checkbox:checked + label {
+    background-color: white;
+    color: black;
+}
+
 .leaflet-control-attribution {
     font-family: 'Jura', Helvetica, Arial, sans-serif;
     color: black;
@@ -27,12 +72,14 @@ body {
 
 .label {
     position: absolute;
-    z-index: 1000;
+    z-index: 101;
     text-align: left;
-    margin: 0px;
+    margin: 5px;
     background: rgba(3,3,3,0.4);
     padding: 2px;
+    border: 1px solid rgba(255,255,255,0.7);
 }
+
 .labelInner {
     padding: 3px 0px;
     font-family: 'Jura', Helvetica, Arial, sans-serif;
@@ -40,10 +87,5 @@ body {
     color: white;
     opacity: 10.0;
     margin: 0px;
-}
-.labelLine {
-    /*border: 2px solid gold;*/
-}
-.labelLine:hover {
-    border: 2px solid gold;
+    z-index: 102;
 }

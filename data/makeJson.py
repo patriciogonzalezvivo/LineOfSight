@@ -3,10 +3,11 @@ import os
 import itertools
 
 data = {}
+types = []
 folder = './satellites'
 for filename in os.listdir(folder):
     type = os.path.splitext(filename)[0]
-    print("Extracting " + filename);
+    types.append(type)
     if filename == ".DS_Store": 
         continue
     f = open(os.path.join(folder, filename), 'r')
@@ -42,6 +43,7 @@ for filename in os.listdir(folder):
             data[ sat['name'] ] = sat
     f.close()
 
+print(types)
 print(str(len(data)) + " satellites");
 final_data = []
 for satellite in data:

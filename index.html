@@ -19,6 +19,9 @@
   <body>
     <div id="map"></div>
 
+    <div id="types" style="position: absolute;" >
+    </div>
+
     <!-- 3rd party libraries -->
     <script src="lib/leaflet/leaflet.js"></script>
     <!-- bog-standard leaflet URL hash -->
@@ -41,6 +44,13 @@
 
     <!-- Mapzen map UI -->
     <script src='//s3.amazonaws.com/assets-staging.mapzen.com/ui/mapzen-ui.min.js'></script>
-
+    <script>
+    MPZN.bug({
+      name: 'OSM from ISS',
+      link: 'http://mapzen.com',
+      tweet: '@openstreetmap from the @space_station by @patriciogv and @mapzen',
+      repo: 'https://github.com/patriciogonzalezvivo/ISS'
+    });
+    </script>
   </body>
 </html>
