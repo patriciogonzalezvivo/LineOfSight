@@ -1,6 +1,6 @@
 ![](imgs/nvp.png)
 
-# NonVisible Paths
+# Invisible Tracks
 
 ## Resources
 
