@@ -1,0 +1,32 @@
+[
+    {
+        "visible": true, 
+        "name": "amateur", 
+        "label": "amateur"
+    }, 
+    {
+        "visible": false, 
+        "name": "navigation", 
+        "label": "navigation"
+    }, 
+    {
+        "visible": false, 
+        "name": "special_interest", 
+        "label": "specials"
+    }, 
+    {
+        "visible": false, 
+        "name": "stations", 
+        "label": "stations"
+    }, 
+    {
+        "visible": false, 
+        "name": "visible", 
+        "label": "visible"
+    }, 
+    {
+        "visible": false, 
+        "name": "weather", 
+        "label": "weather"
+    }
+]

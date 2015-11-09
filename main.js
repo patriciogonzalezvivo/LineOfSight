@@ -1,99 +1,13 @@
 // Author: @patriciogv 2015
+
+// GLOBAL PARAMETERS
+//==========================
 var samplesTotal = 300;
 var samplesStep = 20;
 var timeOffset = 120;
-var loadAll = true;
 var startTime = 0;
 
-var types = { 
-                amateur: false, 
-                classfd: false,
-                cubesat: false,
-                dmc: false,
-                education: false,
-                engineering: false,
-                galileo: false,
-                geo: false,
-                geodetic: false,
-                'glo-ops': false,
-                globalstar: false,
-                goes: false,
-                gorizont: false,
-                'gps-ops': false,
-                intelsat: false,
-                iridium: false,
-                military: false,
-                molniya: false,
-                musson: false,
-                nnss: false,
-                noaa: false,
-                orbcomm: false,
-                'other-comm': false,
-                other: false,
-                radar: false,
-                raduga: false,
-                resource: false,
-                sarsat: false,
-                sbas: false,
-                science: false,
-                stations: false,
-                tdrss: false,
-                'tle-new': false,
-                visual: true,
-                weather: false,
-                'x-comm': false
-            }
-
-var satellites = [
-                {     
-                    name: "ISS (ZARYA)", 
-                    type: "visual, tdrss, stations, amateur",
-                    state: "operational", 
-                    tleLine1: '1 25544U 98067A   15305.48861694  .00009749  00000-0  15091-3 0  9998',
-                    tleLine2: '2 25544  51.6435 118.8193 0006784  99.4264 289.9384 15.54738918969408' 
-                },
-                {   
-                    name: 'S-CUBE',   
-                    type: "stations",               
-                    tleLine1: '1 40898U 98067GY  15305.82492873  .00034571  00000-0  47173-3 0  9991',
-                    tleLine2: '2 40898  51.6406 116.6319 0007444  96.7092 263.4748 15.57127173  6944'
-                },
-                {
-                    name: 'NOAA 15',
-                    state: "operational", 
-                    type: "weather",      
-                    tleLine1: '1 25338U 98030A   15120.50133940  .00000181  00000-0  95272-4 0  9994',
-                    tleLine2: '2 25338  98.7718 119.1083 0009683 311.6024  48.4325 14.25608869882046'
-                },
-                {
-                    name: 'NOAA 18',
-                    state: "operational", 
-                    type: "weather",   
-                    tleLine1: '1 28654U 05018A   15120.45078669  .00000138  00000-0  10028-3 0  9999',
-                    tleLine2: '2 28654  99.1821 111.9351 0015379  94.2653 266.0275 14.12186249512332'
-                },
-                {
-                    name: 'NOAA 19',
-                    state: "operational", 
-                    type: "weather",    
-                    tleLine1: '1 33591U 09005A   15120.47475619  .00000166  00000-0  11521-3 0  9993',
-                    tleLine2: '2 33591  98.9860  70.2496 0013223 308.0264  51.9713 14.11922134320756'
-                },
-                {
-                    state: "operational", 
-                    type: "education", 
-                    name: "SAUDISAT 2", 
-                    tleLine1: "1 28371U 04025F   15120.86324450  .00000363  00000-0  95978-4 0  9997", 
-                    tleLine2: "2 28371  98.0249  91.1935 0024780 230.3750 129.5284 14.54021196574723"
-                }, 
-                {
-                    state: "operational", 
-                    type: "education", 
-                    name: "SAUDISAT 3", 
-                    tleLine1: "1 31118U 07012B   15120.78597718  .00000346  00000-0  66965-4 0  9994",
-                    tleLine2: "2 31118  97.7359 145.6219 0013799 241.0365 118.9441 14.68865295430733"
-                }, 
-                ];
+var satellites, types;
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -208,19 +122,24 @@ map = (function () {
 function init() {
     // Scene initialized
     layer.on('init', function() {
-        if (loadAll) {
-            // Get the geoJSON to add the orbit to
-            getHttp("data/satellites.json", function (err, res) {
-                if (err) {
-                    console.error(err);
-                }
-                // Parse the geoJSON
-                satellites = JSON.parse(res);;
-                initOrbit();
-            });
-        } else {
-            initOrbit();    
-        }
+        // Get the geoJSON to add the orbit to
+        getHttp("data/satellites.json", function (err, res) {
+            if (err) {
+                console.error(err);
+            }
+            // Parse the geoJSON
+            satellites = JSON.parse(res);
+            initOrbit();
+        });
+        getHttp("data/types.json", function (err, res) {
+            if (err) {
+                console.error(err);
+            }
+            // Parse the geoJSON
+            types = JSON.parse(res);
+            console.log(types);
+            initHUD();
+        });
     });
     layer.addTo(map);
 }
@@ -228,18 +147,6 @@ function init() {
 function initOrbit() {
     startTime = new Date();
     addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, timeOffset);
-
-    var typesDOM = document.getElementById("types");
-    var typesNames = Object.keys(types);
-
-    typesDOM.innerHTML = '<p id="types-title" >Types</p> <div class="hr"><hr /></div>'
-    for (var typeName of typesNames) {
-        var stt = '';
-        if (types[typeName]) {
-            stt = 'checked';
-        }
-        typesDOM.innerHTML = typesDOM.innerHTML+ '<input type="checkbox" name="checkbox-option" id="checkbox-'+typeName+'" class="hide-checkbox" value="'+typeName+'" '+stt+'><label for="checkbox-'+typeName+'">'+typeName+'</label>';
-    }
 
     window.setTimeout( function() {
         var gl = scene.gl;
@@ -253,11 +160,6 @@ function initOrbit() {
         
         var width = samplesTotal;
         var height = satellites.length;
-
-        // Usefull documentation: 
-        //      - http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-        //      - http://stackoverflow.com/questions/22666556/webgl-texture-creation-trouble
-        //      - http://nullprogram.com/blog/2014/06/29/
         
         var uniforms = {};
         uniforms.u_data = {};
@@ -291,26 +193,34 @@ function initOrbit() {
         );
         // gl.bindTexture(gl.TEXTURE_2D, null);
         reloadTangram();
-
-        window.setTimeout( function() {
-            // scene.config.layers["orbit-labels"].draw.text.visible = true;
-            // reloadTangram();
-
-            document.getElementById("types").addEventListener("click", function( event ) {
-                var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
-                var active_types = "";
-                for (var check in checks) {
-                    if (check.indexOf('checkbox-')>-1) {
-                        if (checks[check].checked) {
-                            active_types = checks[check].value + " " + active_types;
-                        }   
-                    }
-                }
-                scene.config.layers.orbit.properties.active_types = active_types;
-                reloadTangram()
-            }, false);
-        }, 5000);
     },3000);
+}
+
+function initHUD() {
+    var typesDOM = document.getElementById("types");
+    typesDOM.innerHTML = '<p id="types-title" >Types</p> <div class="hr"><hr /></div>'
+
+    for (var type of types) {
+        var stt = '';
+        if (type.visible === true) {
+            stt = 'checked';
+        }
+        typesDOM.innerHTML = typesDOM.innerHTML+ '<input type="checkbox" name="checkbox-option" id="checkbox-'+type.name+'" class="hide-checkbox" value="'+type.name+'" '+stt+'><label for="checkbox-'+type.name+'">'+type.label+'</label>';
+    }
+
+    document.getElementById("types").addEventListener("click", function( event ) {
+        var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
+        var active_types = "";
+        for (var check in checks) {
+            if (check.indexOf('checkbox-')>-1) {
+                if (checks[check].checked) {
+                    active_types = checks[check].value + " " + active_types;
+                }   
+            }
+        }
+        scene.config.layers.orbit.properties.active_types = active_types;
+        reloadTangram()
+    }, false);
 }
 
 function reloadTangram() {

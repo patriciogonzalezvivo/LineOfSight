@@ -4,10 +4,17 @@ import itertools
 
 data = {}
 types = []
-folder = './satellites'
+# folder = './all'
+folder = './curated'
 for filename in os.listdir(folder):
     type = os.path.splitext(filename)[0]
-    types.append(type)
+
+    typeObj = {}
+    typeObj['visible'] = False
+    typeObj['name'] = type
+    typeObj['label'] = type
+    types.append(typeObj)
+
     if filename == ".DS_Store": 
         continue
     f = open(os.path.join(folder, filename), 'r')
@@ -44,6 +51,10 @@ for filename in os.listdir(folder):
     f.close()
 
 print(types)
+
+with open("types.json", "w") as outfile:
+    outfile.write(json.dumps(types, outfile, indent=4))
+
 print(str(len(data)) + " satellites");
 final_data = []
 for satellite in data:

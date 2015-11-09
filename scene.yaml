@@ -212,7 +212,7 @@ styles:
         lighting: false
     area:
         base: polygons
-        mix: [zoom, hud]
+        mix: [zoom, hud, functions-aastep,]
         blend: inlay
         shaders: 
             blocks: 
@@ -225,7 +225,7 @@ styles:
                     float stripes(vec2 st, float width){
                         st = rotate2D(.72)*st;
                         st *= 92.;
-                        return step(.5+width*0.5,abs(sin(st.y*3.14159265358)));
+                        return aastep(.5+width*0.5,abs(sin(st.y*3.14159265358)));
                     }
                 filter: |
                     color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
@@ -344,7 +344,7 @@ layers:
     orbit:
         data: { source: orbits }
         properties: 
-            active_types: "visual"
+            active_types: "amateur"
         filter: |
                 function () {
                     var types = properties.active_types.split(" ");
