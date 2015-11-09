@@ -6,7 +6,11 @@ data = {}
 types = []
 # folder = './all'
 folder = './curated'
+extraCounter = 0
 for filename in os.listdir(folder):
+    if filename == ".DS_Store": 
+        continue
+
     type = os.path.splitext(filename)[0]
 
     typeObj = {}
@@ -15,8 +19,6 @@ for filename in os.listdir(folder):
     typeObj['label'] = type
     types.append(typeObj)
 
-    if filename == ".DS_Store": 
-        continue
     f = open(os.path.join(folder, filename), 'r')
     for name,lte1,lte2 in itertools.izip_longest(*[f]*3):
         sat = {}
@@ -41,16 +43,22 @@ for filename in os.listdir(folder):
         if "[P]" in sat['name']: continue
         if "[S]" in sat['name']: continue
         if "[B]" in sat['name']: continue
+
+        if sat['name'] == 'GEARRS-1':
+            continue
+
         if sat['name'].endswith(' [+]') or sat['name'].endswith(' [-]') or sat['name'].endswith(' [P]') or sat['name'].endswith(' [B]') or sat['name'].endswith(' [S]') or sat['name'].endswith(' [X]'):
             sat['name'] = sat['name'][:-4]
+
+        if sat['name'] == 'SL-8 R/B' or sat['name'] == 'SL-16 R/B' or sat['name'] == 'SL-3 R/B' or sat['name'] == 'ARIANE 40 R/B' or sat['name'] == 'DELTA 2 R/B(1)' or sat['name'] == 'SL-14 R/B':
+            sat['name'] += " " + str(extraCounter)
+            extraCounter += 1
 
         if sat['name'] in data:
             data[ sat['name'] ]['type'] = sat['type'] + ', ' + data[ sat['name'] ]['type']
         else: 
             data[ sat['name'] ] = sat
     f.close()
-
-print(types)
 
 with open("types.json", "w") as outfile:
     outfile.write(json.dumps(types, outfile, indent=4))

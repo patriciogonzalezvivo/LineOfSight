@@ -64,7 +64,6 @@ map = (function () {
                 if (feature != null) {
                     var label = '';
                     if (feature.properties != null) {
-                        // console.log(feature.properties);
                         var obj = JSON.parse(JSON.stringify(feature.properties));
                         label = "";
                         for (var key in feature.properties) {
@@ -137,7 +136,6 @@ function init() {
             }
             // Parse the geoJSON
             types = JSON.parse(res);
-            console.log(types);
             initHUD();
         });
     });
@@ -212,14 +210,15 @@ function initHUD() {
         var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
         var active_types = "";
         for (var check in checks) {
-            if (check.indexOf('checkbox-')>-1) {
+            if ( check !== "checkbox-option" && check.indexOf('checkbox-')>-1) {
                 if (checks[check].checked) {
                     active_types = checks[check].value + " " + active_types;
                 }   
             }
         }
+        console.log(active_types);
         scene.config.layers.orbit.properties.active_types = active_types;
-        reloadTangram()
+        reloadTangram();
     }, false);
 }
 

@@ -5,27 +5,27 @@
         "label": "amateur"
     }, 
     {
-        "visible": false, 
+        "visible": true, 
         "name": "navigation", 
         "label": "navigation"
     }, 
     {
-        "visible": false, 
+        "visible": true, 
         "name": "special_interest", 
-        "label": "specials"
+        "label": "special"
     }, 
     {
-        "visible": false, 
+        "visible": true, 
         "name": "stations", 
         "label": "stations"
     }, 
     {
-        "visible": false, 
+        "visible": true, 
         "name": "visible", 
         "label": "visible"
     }, 
     {
-        "visible": false, 
+        "visible": true, 
         "name": "weather", 
         "label": "weather"
     }
