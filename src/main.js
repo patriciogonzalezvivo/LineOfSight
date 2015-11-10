@@ -171,7 +171,7 @@ function initOrbit() {
                 var index = (y*width+x)*4;
                 pixels[index] = .5+(satellites[y].track[x].ln/180)*.5;
                 pixels[index+1] = .5+(satellites[y].track[x].lt/90)*.5;
-                pixels[index+2] = satellites[y].track[x].h/1000;
+                pixels[index+2] = satellites[y].track[x].h/2000;
                 pixels[index+3] = 1;
             }
         }

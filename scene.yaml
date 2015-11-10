@@ -7,6 +7,135 @@ sources:
     orbits:
         type: GeoJSON
         url: data/orbits.geojson
+
+scene:
+    background: 
+        color: '#888'
+
+layers:
+    orbit:
+        data: { source: orbits }
+        properties: 
+            active_types: "amateur navigation stations visible weather"
+        filter: |
+                function () {
+                    var types = properties.active_types.split(" ");
+                    for (var type of types) {
+                        if (type !== "" && feature['type'].indexOf(type) > -1) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+        draw:
+            lines:
+                interactive: true
+                order: 0
+                color: [.5, .5, .5, .0]
+                width: 10px
+                extrude: function () { return feature.height * 1000; }
+            orbit:
+                order: 10
+                color: |
+                    function(){
+                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.id/20000 ]; 
+                    }
+                width: [ [0,10px], [20,150px]]
+                extrude: function () { return feature.height * 1000; }
+    earth:
+        data: { source: osm }
+        draw:
+            hud:
+                order: 1
+                color: '#555'
+    water:
+        data: { source: osm }
+        draw:
+            hud:
+                order: 2
+                color: '#888'
+    landuse:
+        data: { source: osm }
+        draw:
+            area:
+                order: 3
+                color: gray
+    buildings:
+        data: { source: osm }
+        draw:
+            polygons:
+                order: 50
+                color: '#999'
+        extruded:
+            draw:
+                polygons:
+                    style: buildings
+                    extrude: function () { return feature.height > 0 || $zoom >= 16; }
+    roads:
+        data: { source: osm, layer: roads }
+        filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
+        draw:
+            lines:
+                order: 7
+                color: [.6,.6,.6]
+                width: [[6,0px], [7,.25px], [10, .5px], [15, .75px], [17, 5m]]
+        highway:
+            filter: { kind: highway }
+            draw:
+                lines:
+                    order: 8
+                    color: [.7,.7,.7]#[1.000,0.897,0.058]
+                    width: [[1,0px], [6,.25px], [11, 2px], [14, 3px], [16, 4px], [17, 10m]]
+            link:
+                filter: { is_link: yes } # on- and off-ramps, etc
+                draw:
+                    lines:
+                        color: [.7,.7,.7]#[1.000,0.933,0.710]
+                        width: [[10,0px], [14, 3px], [16, 5px], [18, 10m]]
+                tunnel-link:
+                    filter: {is_tunnel: yes, $zoom: {min: 13} }
+                    draw:
+                        lines:
+                            color: [.5,.5,.5]#[0.805,0.748,0.557]
+            tunnel:
+                filter: {is_tunnel: yes, $zoom: {min: 13} }
+                draw:
+                    lines:
+                        order: 5
+                        color: [.5,.5,.5]#[0.805,0.748,0.557]
+        major_road:
+            filter: { kind: major_road }
+            draw:
+                lines:
+                    color: [[13, [.6,.6,.6]], [17, white]]
+                    width: [[1,0px], [6,.5px], [11,1px], [14, 2px], [16, 2.5px], [19, 8m]]
+                    primary:
+                        filter: { highway: primary }
+                        draw:
+                            lines:
+                                width: [[1,0px], [6,.5px], [11,1px], [11, 1.5px], [13, 2.5px], [16, 2.5px], [19, 8m]]
+                    secondary:
+                        filter: { highway: secondary }
+                        draw:
+                            lines:
+                                width: [[1,0px], [6,.5px], [11,1px], [13, 1.5px], [14, 2.5px], [16, 2.5px], [19, 8m]]
+                    tertiary:
+                        filter: { highway: tertiary }
+                        draw:
+                            lines:
+                                width: [[1,0px], [6,.5px], [11,1px], [13, .75px], [14, 2.5px], [16, 2.5px], [19, 8m]]
+        path:
+            filter: { kind: path }
+            draw:
+                lines:
+                    color: [0.8, 0.8, 0.8]
+                    width: [[14,.1px],[16,.5px], [17, 2m]]
+        z-order:
+            filter: { $zoom: {min: 14} }
+            draw:
+                spline:
+                    order: function() {return 6 + feature.sort_key;}
+
 cameras:
     perspective:
         type: perspective
@@ -93,7 +222,6 @@ styles:
                     float lat2y_m (float lat) { return EARTH_RADIUS*log(tan(QUATER_PI+ deg2rad(lat)/2.0)); }
                     float lon2x_m (float lon) { return deg2rad(lon)*EARTH_RADIUS; }
     shapes-rect:
-        mix: functions-aastep
         shaders:
             blocks:
                 global: |
@@ -116,7 +244,7 @@ styles:
                     // ================================
                     float rect(vec2 st, vec2 size, float radio) {
                         radio = max(.000001, radio);
-                        return 1.0-aastep(radio, rectDF(st, size-radio));
+                        return 1.0-step(radio, rectDF(st, size-radio));
                     }
                     
                     float rect(vec2 st, float size, float radio) {
@@ -127,7 +255,7 @@ styles:
                     // ================================
                     float rect(vec2 st, vec2 size){
                         size = .25-size*.125;
-                        vec2 uv = aastep(size,st*(1.0-st));
+                        vec2 uv = step(size,st*(1.0-st));
                         return (uv.x*uv.y);
                     }
                     
@@ -211,18 +339,19 @@ styles:
                     float zoom = 0.0001+fract(u_map_position.z);
                     float overlayGrid = 0.0;
                     overlayGrid += TileGrid()*.5;
+                    //
                     // CROSSES
                     vec2 crosses_st = st + .5;
                     vec2 crosses_st_f = fract(crosses_st);
                     overlayGrid *= 1.-rect(crosses_st_f, .003*(1.+(1.-zoom)));
                     overlayGrid += cross(crosses_st_f, .0001, .012*(1.+(1.-zoom)) )*.75;
                     //
-                    // APPLY 
+                    // APPLY
                     //===============================
-                    color.rgb = mix(color.rgb,vec3(0.0),clamp(overlayGrid,0.,1.));                  
+                    color.rgb = mix(color.rgb,vec3(0.0),clamp(overlayGrid,0.,1.));
     area:
         base: polygons
-        mix: [geometry-matrices, functions-map, hud]
+        mix: [geometry-matrices, functions-map, functions-aastep, hud]
         blend: inlay
         shaders: 
             blocks: 
@@ -266,27 +395,32 @@ styles:
                         return ((encodedIndex.x*255.)*255.+(encodedIndex.y*255.))+.5;
                     }
 
-                    vec3 getPosFor(float index, float time) {
+                    // Return normalized values for lat, lon and height, and angle in radiants
+                    vec4 getPosFor(float index, float time) {
                         float offsetX = ((time+u_param.w)/u_param.z);
-                        vec2 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xy;
-                        vec2 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xy;
-                        vec2 dist = normalize(posB-posA);
-                        return vec3(mix(posA,posB,fract(offsetX)),atan(dist.y,dist.x));
+                        vec3 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xyz;
+                        vec3 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xyz;
+                        vec2 dist = normalize(posB.xy-posA.xy);
+                        return vec4( mix(posA,posB,fract(offsetX)) ,atan(dist.y,dist.x));
                     }
                 color: |
-
+                    // Locate the satellite
+                    //===============================
                     vec2 merc = u_map_position.xy+v_position.xy;
                     vec2 latlon = vec2(y2lat_m(merc.y),x2lon_m(merc.x));
                     vec2 uv = (latlon.yx/vec2(180.,90.)+1.)*.5;
 
                     float index = getIndex(color.st);
-                    vec3 pos = getPosFor(index,u_time);
+                    vec4 pos = getPosFor(index,u_time);
 
                     pos.xy = ((pos.xy*2.)-1.)*vec2(180.,90.);
                     pos.xy = vec2(lon2x_m(pos.x),lat2y_m(pos.y));
 
                     vec2 st = (merc-pos.xy)*.0000002;
                     st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
+
+                    // Draw stuff
+                    //===============================
 
                     // Line
                     color = vec4(vec3(.9),pulse(v_texcoord.x,.5,.05)*.5);
@@ -300,130 +434,8 @@ styles:
 
                     // Satellite
                     st -= .5;
-                    st = (rotate2D(pos.z) * st)+.5;
-                    spot = rect(st,0.001);
+                    st *= 2.-(clamp(pos.z,0.,1.));
+                    st = (rotate2D(pos.w) * st)+.5;
+                    spot = rect(st,0.002);
                     color.rgb = mix(color.rgb, vec3(1.), spot);
                     color.a += spot;
-layers:
-    orbit:
-        data: { source: orbits }
-        properties: 
-            active_types: "amateur navigation stations visible weather"
-        filter: |
-                function () {
-                    var types = properties.active_types.split(" ");
-                    for (var type of types) {
-                        if (type !== "" && feature['type'].indexOf(type) > -1) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-        draw:
-            lines:
-                interactive: true
-                order: 0
-                color: [.5, .5, .5, .0]
-                width: 10px
-                extrude: function () { return feature.height * 1000; }
-            orbit:
-                order: 10
-                color: |
-                    function(){
-                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.id/20000 ]; 
-                    }
-                width: [ [0,10px], [20,150px]]
-                extrude: function () { return feature.height * 1000; }
-    earth:
-        data: { source: osm }
-        draw:
-            hud:
-                order: 1
-                color: '#555'
-    water:
-        data: { source: osm }
-        draw:
-            hud:
-                order: 2
-                color: '#888'
-    landuse:
-        data: { source: osm }
-        draw:
-            area:
-                order: 3
-                color: gray
-    buildings:
-        data: { source: osm }
-        draw:
-            polygons:
-                order: 50
-                color: '#999'
-        extruded:
-            draw:
-                polygons:
-                    style: buildings
-                    extrude: function () { return feature.height > 0 || $zoom >= 16; }
-    roads:
-        data: { source: osm, layer: roads }
-        filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
-        draw:
-            lines:
-                order: 7
-                color: white
-                width: [[6,0px], [7,.25px], [10, .5px], [15, .75px], [17, 5m]]
-        highway:
-            filter: { kind: highway }
-            draw:
-                lines:
-                    order: 8
-                    color: [1.000,0.897,0.058]
-                    width: [[1,0px], [6,.25px], [11, 2px], [14, 3px], [16, 4px], [17, 10m]]
-            link:
-                filter: { is_link: yes } # on- and off-ramps, etc
-                draw:
-                    lines:
-                        color: [1.000,0.933,0.710]
-                        width: [[10,0px], [14, 3px], [16, 5px], [18, 10m]]
-                tunnel-link:
-                    filter: {is_tunnel: yes, $zoom: {min: 13} }
-                    draw:
-                        lines:
-                            color: [0.805,0.748,0.557]
-            tunnel:
-                filter: {is_tunnel: yes, $zoom: {min: 13} }
-                draw:
-                    lines:
-                        order: 5
-                        color: [0.805,0.748,0.557]
-        major_road:
-            filter: { kind: major_road }
-            draw:
-                lines:
-                    color: [[13, [0.8, 0.8, 0.8]], [17, white]]
-                    width: [[1,0px], [6,.5px], [11,1px], [14, 2px], [16, 2.5px], [19, 8m]]
-                    primary:
-                        filter: { highway: primary }
-                        draw:
-                            lines:
-                                width: [[1,0px], [6,.5px], [11,1px], [11, 1.5px], [13, 2.5px], [16, 2.5px], [19, 8m]]
-                    secondary:
-                        filter: { highway: secondary }
-                        draw:
-                            lines:
-                                width: [[1,0px], [6,.5px], [11,1px], [13, 1.5px], [14, 2.5px], [16, 2.5px], [19, 8m]]
-                    tertiary:
-                        filter: { highway: tertiary }
-                        draw:
-                            lines:
-                                width: [[1,0px], [6,.5px], [11,1px], [13, .75px], [14, 2.5px], [16, 2.5px], [19, 8m]]
-        path:
-            filter: { kind: path }
-            draw:
-                lines:
-                    color: [0.8, 0.8, 0.8]
-                    width: [[14,.1px],[16,.5px], [17, 2m]]
-        z-order:
-            filter: { $zoom: {min: 14} }
-            draw:
-                spline:
-                    order: function() {return 6 + feature.sort_key;}
