@@ -7,6 +7,10 @@ var samplesStep = 20;
 var timeOffset = 120;
 var startTime = 0;
 
+// Const
+var EARTH_RADIUS = 6378137.0;
+
+// SOURCES holders
 var library, satellites, types;
 
 // ============================================= INIT 
@@ -166,8 +170,10 @@ function initOrbit() {
         uniforms.u_data = {};
 
         var pixels = new Float32Array(width*height*4);
+
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
+
                 var index = (y*width+x)*4;
                 pixels[index] = .5+(satellites[y].track[x].ln/180)*.5;
                 pixels[index+1] = .5+(satellites[y].track[x].lt/90)*.5;
@@ -232,6 +238,8 @@ function reloadTangram() {
 }
 
 // ============================================= Helpers
+function lat2y(a) { return 180/Math.PI * Math.log(Math.tan(Math.PI/4+a*(Math.PI/180)/2)); }
+
 function parseQuery (qstr) {
     var query = {};
     var a = qstr.split('&');
