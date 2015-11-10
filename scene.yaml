@@ -185,16 +185,12 @@ styles:
                         float press = 0.5+(1.0-fract(u_map_position.z))*0.1;
                         pct += grid(st,0.02,press)*.5;
                         pct += grid(st,0.01,press)*.25;
+                        pct += grid(st,0.1,press)*.25;
                         return pct*.5;
                     }
                     float TileGrid(){ return mix(TileGrid(1.),TileGrid(2.),fract(u_map_position.z)); }
-    zoom:
-        mix: functions-map
-        shaders:
-            blocks: 
-                normal: |
-                    float SatOsmPct = pow(1.-map(u_map_position.z,6.,9.,0.,1.),5.0);
     hud:
+        base: polygons
         mix: [shapes-cross, grid]
         shaders:
             blocks:
@@ -207,7 +203,6 @@ styles:
                     st_center -= .5;
                     st_center.x *= aspect;
                     st_center += .5;
-                    float light = 1.;
                     //
                     // GRID ON TILES
                     //===============================
@@ -224,21 +219,10 @@ styles:
                     //
                     // APPLY 
                     //===============================
-                    color.rgb = mix(color.rgb,vec3(light),clamp(overlayGrid,0.,1.)); 
-                    //
-                    // FILTER
-                    //===============================
-                    //vec2 st_i = floor(st_center*(max(u_resolution.x,u_resolution.y))*.1 );
-                    //color += step(0.5,abs(mod(st_i.x,2.)-mod(st_i.y+1.,2.)))*0.1;                   
-    earth:
-        base: polygons
-        mix: [hud, zoom]
-    water:
-        base: polygons
-        mix: [hud, zoom]
+                    color.rgb = mix(color.rgb,vec3(0.0),clamp(overlayGrid,0.,1.));                  
     area:
         base: polygons
-        mix: [geometry-matrices, zoom, hud]
+        mix: [geometry-matrices, functions-map, hud]
         blend: inlay
         shaders: 
             blocks: 
@@ -249,7 +233,14 @@ styles:
                         return aastep(.5+width*0.5,abs(sin(st.y*3.14159265358)));
                     }
                 filter: |
+                    float SatOsmPct = pow(1.-map(u_map_position.z,6.,9.,0.,1.),5.0);
                     color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
+    buildings:
+        base: polygons
+        shaders:
+            blocks:
+                color: |
+                    color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
     orbit:
         base: lines
         mix: [geometry-matrices, geometry-projection, functions-map, shapes-cross]
@@ -268,7 +259,7 @@ styles:
             blocks:
                 global: |
                     float pulse(float x, float p, float w){
-                        return aastep(.5,(smoothstep(p-w*.5,p,x) + smoothstep(p+w*.5,p,x))-1.0);
+                        return (smoothstep(p-w*.5,p,x) + smoothstep(p+w*.5,p,x))-1.0;
                     }
 
                     float getIndex (vec2 encodedIndex) {
@@ -283,6 +274,7 @@ styles:
                         return vec3(mix(posA,posB,fract(offsetX)),atan(dist.y,dist.x));
                     }
                 color: |
+
                     vec2 merc = u_map_position.xy+v_position.xy;
                     vec2 latlon = vec2(y2lat_m(merc.y),x2lon_m(merc.x));
                     vec2 uv = (latlon.yx/vec2(180.,90.)+1.)*.5;
@@ -296,30 +288,23 @@ styles:
                     vec2 st = (merc-pos.xy)*.0000002;
                     st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
 
-                    st = rotate2D(pos.z) * st;
+                    // Line
+                    color = vec4(vec3(.9),pulse(v_texcoord.x,.5,.05)*.5);
+
+                    // Bounding Box
+                    float spot = 0.;
                     st += .5;
-                    float spot = cross(st,.04,.005);
-                    color.rgb = mix(vec3(1.,1.,0.5), vec3(.0,.0,.0), spot);
-                    color.a = spot + pulse(v_texcoord.x,.5,.05)*.5;
+                    spot = max(rect(st,0.02)-rect(st,0.015)-cross(st,.04,.05),0.);
+                    color.rgb = mix(color.rgb, vec3(0.), spot);
+                    color.a += spot;
+
+                    // Satellite
+                    st -= .5;
+                    st = (rotate2D(pos.z) * st)+.5;
+                    spot = rect(st,0.001);
+                    color.rgb = mix(color.rgb, vec3(1.), spot);
+                    color.a += spot;
 layers:
-    earth:
-        data: { source: osm }
-        draw:
-            earth:
-                order: 1
-                color: '#555'
-    water:
-        data: { source: osm }
-        draw:
-            water:
-                order: 2
-                color: '#888'
-    landuse:
-        data: { source: osm }
-        draw:
-            area:
-                order: 3
-                color: gray
     orbit:
         data: { source: orbits }
         properties: 
@@ -349,6 +334,35 @@ layers:
                     }
                 width: [ [0,10px], [20,150px]]
                 extrude: function () { return feature.height * 1000; }
+    earth:
+        data: { source: osm }
+        draw:
+            hud:
+                order: 1
+                color: '#555'
+    water:
+        data: { source: osm }
+        draw:
+            hud:
+                order: 2
+                color: '#888'
+    landuse:
+        data: { source: osm }
+        draw:
+            area:
+                order: 3
+                color: gray
+    buildings:
+        data: { source: osm }
+        draw:
+            polygons:
+                order: 50
+                color: '#999'
+        extruded:
+            draw:
+                polygons:
+                    style: buildings
+                    extrude: function () { return feature.height > 0 || $zoom >= 16; }
     roads:
         data: { source: osm, layer: roads }
         filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }

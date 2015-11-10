@@ -38,7 +38,7 @@ wget -q http://www.celestrak.com/NORAD/elements/science.txt
 wget -q http://www.celestrak.com/NORAD/elements/stations.txt
 wget -q http://www.celestrak.com/NORAD/elements/tdrss.txt
 wget -q http://www.celestrak.com/NORAD/elements/tle-new.txt
-wget -q http://www.celestrak.com/NORAD/elements/visual.txt
+wget -q http://www.celestrak.com/NORAD/elements/visual.txt -o visible.txt
 wget -q http://www.celestrak.com/NORAD/elements/weather.txt
 wget -q http://www.celestrak.com/NORAD/elements/x-comm.txt
 wget -q http://www.celestrak.com/NORAD/elements/1999-025.txt

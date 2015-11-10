@@ -1,0 +1,182 @@
+[
+    {
+        "visible": false, 
+        "name": "amateur", 
+        "label": "amateur"
+    }, 
+    {
+        "visible": false, 
+        "name": "classfd", 
+        "label": "classfd"
+    }, 
+    {
+        "visible": false, 
+        "name": "cubesat", 
+        "label": "cubesat"
+    }, 
+    {
+        "visible": false, 
+        "name": "dmc", 
+        "label": "dmc"
+    }, 
+    {
+        "visible": false, 
+        "name": "education", 
+        "label": "education"
+    }, 
+    {
+        "visible": false, 
+        "name": "engineering", 
+        "label": "engineering"
+    }, 
+    {
+        "visible": false, 
+        "name": "galileo", 
+        "label": "galileo"
+    }, 
+    {
+        "visible": false, 
+        "name": "geo", 
+        "label": "geo"
+    }, 
+    {
+        "visible": false, 
+        "name": "geodetic", 
+        "label": "geodetic"
+    }, 
+    {
+        "visible": false, 
+        "name": "glo-ops", 
+        "label": "glo-ops"
+    }, 
+    {
+        "visible": false, 
+        "name": "globalstar", 
+        "label": "globalstar"
+    }, 
+    {
+        "visible": false, 
+        "name": "goes", 
+        "label": "goes"
+    }, 
+    {
+        "visible": false, 
+        "name": "gorizont", 
+        "label": "gorizont"
+    }, 
+    {
+        "visible": false, 
+        "name": "gps-ops", 
+        "label": "gps-ops"
+    }, 
+    {
+        "visible": false, 
+        "name": "intelsat", 
+        "label": "intelsat"
+    }, 
+    {
+        "visible": false, 
+        "name": "iridium", 
+        "label": "iridium"
+    }, 
+    {
+        "visible": false, 
+        "name": "military", 
+        "label": "military"
+    }, 
+    {
+        "visible": false, 
+        "name": "molniya", 
+        "label": "molniya"
+    }, 
+    {
+        "visible": false, 
+        "name": "musson", 
+        "label": "musson"
+    }, 
+    {
+        "visible": false, 
+        "name": "nnss", 
+        "label": "nnss"
+    }, 
+    {
+        "visible": false, 
+        "name": "noaa", 
+        "label": "noaa"
+    }, 
+    {
+        "visible": false, 
+        "name": "orbcomm", 
+        "label": "orbcomm"
+    }, 
+    {
+        "visible": false, 
+        "name": "other-comm", 
+        "label": "other-comm"
+    }, 
+    {
+        "visible": false, 
+        "name": "other", 
+        "label": "other"
+    }, 
+    {
+        "visible": false, 
+        "name": "radar", 
+        "label": "radar"
+    }, 
+    {
+        "visible": false, 
+        "name": "raduga", 
+        "label": "raduga"
+    }, 
+    {
+        "visible": false, 
+        "name": "resource", 
+        "label": "resource"
+    }, 
+    {
+        "visible": false, 
+        "name": "sarsat", 
+        "label": "sarsat"
+    }, 
+    {
+        "visible": false, 
+        "name": "sbas", 
+        "label": "sbas"
+    }, 
+    {
+        "visible": false, 
+        "name": "science", 
+        "label": "science"
+    }, 
+    {
+        "visible": false, 
+        "name": "stations", 
+        "label": "stations"
+    }, 
+    {
+        "visible": false, 
+        "name": "tdrss", 
+        "label": "tdrss"
+    }, 
+    {
+        "visible": false, 
+        "name": "tle-new", 
+        "label": "tle-new"
+    }, 
+    {
+        "visible": true, 
+        "name": "visible", 
+        "label": "visible"
+    }, 
+    {
+        "visible": false, 
+        "name": "weather", 
+        "label": "weather"
+    }, 
+    {
+        "visible": false, 
+        "name": "x-comm", 
+        "label": "x-comm"
+    }
+]

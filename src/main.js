@@ -7,7 +7,7 @@ var samplesStep = 20;
 var timeOffset = 120;
 var startTime = 0;
 
-var satellites, types;
+var library, satellites, types;
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -21,6 +21,9 @@ map = (function () {
         map_start_location = [url_hash[1],url_hash[2], url_hash[0]];
         map_start_location = map_start_location.map(Number);
     }
+
+    var query = parseQuery(window.location.search.slice(1));
+    library = query['load'] ? query['load'] : 'curated';
 
     // Leaflet Map
     var map = L.map('map',{
@@ -39,9 +42,9 @@ map = (function () {
     var scene = layer.scene;
     window.scene = scene;
 
-    var keytext = "name";
+    var keytext = 'name';
     window.keytext = keytext;
-    var valuetext = "ISS";
+    var valuetext = 'ISS';
     window.valuetext = valuetext;
 
     // Feature selection
@@ -65,7 +68,7 @@ map = (function () {
                     var label = '';
                     if (feature.properties != null) {
                         var obj = JSON.parse(JSON.stringify(feature.properties));
-                        label = "";
+                        label = '';
                         for (var key in feature.properties) {
                             if (key === 'kind' || key === 'id') continue;
                             var val = feature.properties[key]
@@ -122,7 +125,7 @@ function init() {
     // Scene initialized
     layer.on('init', function() {
         // Get the geoJSON to add the orbit to
-        getHttp("data/satellites.json", function (err, res) {
+        getHttp('data/'+library+'-satellites.json', function (err, res) {
             if (err) {
                 console.error(err);
             }
@@ -130,7 +133,7 @@ function init() {
             satellites = JSON.parse(res);
             initOrbit();
         });
-        getHttp("data/types.json", function (err, res) {
+        getHttp('data/'+library+'-types.json', function (err, res) {
             if (err) {
                 console.error(err);
             }
@@ -144,7 +147,7 @@ function init() {
 
 function initOrbit() {
     startTime = new Date();
-    addOrbitToTangramSource("orbits", satellites, samplesStep, samplesTotal, timeOffset);
+    addOrbitToTangramSource('orbits', satellites, samplesStep, samplesTotal, timeOffset);
 
     window.setTimeout( function() {
         var gl = scene.gl;
@@ -195,7 +198,7 @@ function initOrbit() {
 }
 
 function initHUD() {
-    var typesDOM = document.getElementById("types");
+    var typesDOM = document.getElementById('types');
     typesDOM.innerHTML = '<p id="types-title" >Types</p> <div class="hr"><hr /></div>'
 
     for (var type of types) {
@@ -206,17 +209,16 @@ function initHUD() {
         typesDOM.innerHTML = typesDOM.innerHTML+ '<input type="checkbox" name="checkbox-option" id="checkbox-'+type.name+'" class="hide-checkbox" value="'+type.name+'" '+stt+'><label for="checkbox-'+type.name+'">'+type.label+'</label>';
     }
 
-    document.getElementById("types").addEventListener("click", function( event ) {
+    document.getElementById('types').addEventListener('click', function( event ) {
         var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
-        var active_types = "";
+        var active_types = '';
         for (var check in checks) {
-            if ( check !== "checkbox-option" && check.indexOf('checkbox-')>-1) {
+            if ( check !== 'checkbox-option' && check.indexOf('checkbox-')>-1) {
                 if (checks[check].checked) {
                     active_types = checks[check].value + " " + active_types;
                 }   
             }
         }
-        console.log(active_types);
         scene.config.layers.orbit.properties.active_types = active_types;
         reloadTangram();
     }, false);
@@ -227,4 +229,15 @@ function reloadTangram() {
     var delta = now.getTime() - startTime.getTime();
     scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, satellites.length, samplesStep, timeOffset + delta/1000];
     scene.rebuild();
+}
+
+// ============================================= Helpers
+function parseQuery (qstr) {
+    var query = {};
+    var a = qstr.split('&');
+    for (var i in a) {
+        var b = a[i].split('=');
+        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+    }
+    return query;
 }

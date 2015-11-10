@@ -8,13 +8,17 @@ types = []
 folder = './curated'
 extraCounter = 0
 for filename in os.listdir(folder):
-    if filename == ".DS_Store": 
+    if filename == '.DS_Store': 
         continue
 
     type = os.path.splitext(filename)[0]
 
     typeObj = {}
-    typeObj['visible'] = False
+    if type == 'visible':
+        typeObj['visible'] = True
+    else:
+        typeObj['visible'] = False
+
     typeObj['name'] = type
     typeObj['label'] = type
     types.append(typeObj)
@@ -26,7 +30,7 @@ for filename in os.listdir(folder):
         sat['name'] = name.rstrip()
         sat['tleLine1'] = lte1.rstrip()
         sat['tleLine2'] = lte2.rstrip()
-        sat['state'] = "operational"
+        sat['state'] = 'operational'
 
         if sat['name'].endswith(' [B]'):
             sat['state'] = "backup";
@@ -60,13 +64,13 @@ for filename in os.listdir(folder):
             data[ sat['name'] ] = sat
     f.close()
 
-with open("types.json", "w") as outfile:
+with open(folder+'-types.json', 'w') as outfile:
     outfile.write(json.dumps(types, outfile, indent=4))
 
-print(str(len(data)) + " satellites");
+print(str(len(data)) + ' satellites');
 final_data = []
 for satellite in data:
     final_data.append( data[satellite] )
-with open("satellites.json", "w") as outfile:
+with open(folder+'-satellites.json', 'w') as outfile:
     outfile.write(json.dumps(final_data, outfile, indent=4))
 outfile.close()

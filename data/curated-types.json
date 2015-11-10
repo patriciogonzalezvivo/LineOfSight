@@ -1,21 +1,21 @@
 [
     {
-        "visible": true, 
+        "visible": false, 
         "name": "amateur", 
         "label": "amateur"
     }, 
     {
-        "visible": true, 
+        "visible": false, 
         "name": "navigation", 
         "label": "navigation"
     }, 
     {
-        "visible": true, 
-        "name": "special_interest", 
+        "visible": false, 
+        "name": "special", 
         "label": "special"
     }, 
     {
-        "visible": true, 
+        "visible": false, 
         "name": "stations", 
         "label": "stations"
     }, 
@@ -25,7 +25,7 @@
         "label": "visible"
     }, 
     {
-        "visible": true, 
+        "visible": false, 
         "name": "weather", 
         "label": "weather"
     }
