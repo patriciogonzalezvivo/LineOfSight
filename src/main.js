@@ -301,7 +301,7 @@ function updateGeocode (lat, lng) {
 
     // This is my API Key for this project. 
     // They are free! get one at https://mapzen.com/developers/sign_in
-    var PELIAS_KEY = 'search--cv2Foc';
+    var PELIAS_KEY = 'search-SrJ-888';
     var endpoint = '//search.mapzen.com/v1/reverse?point.lat=' + lat + '&point.lon=' + lng + '&size=1&layers=coarse&api_key=' + PELIAS_KEY;
 
     getHttp(endpoint, function(err, res){
