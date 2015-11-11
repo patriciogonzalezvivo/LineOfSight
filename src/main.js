@@ -168,6 +168,9 @@ function initFeatureSelection () {
             if (feature != null) {
                 var label = '';
                 if (feature.properties != null) {
+                    if (last_selected === feature.properties.id ){
+                        return;
+                    }
                     var obj = JSON.parse(JSON.stringify(feature.properties));
                     label = "<span class='title'>"+feature.properties.name+"</span><br><div class='hr'><hr />";
                     for (var key in feature.properties) {
@@ -178,6 +181,8 @@ function initFeatureSelection () {
                         label += "<span class='labelLine' key="+key+" value="+val+">"+key+" : "+val+"</span><br>"
                     }
                     label += "<div class='hr'><hr /><span class='labelLine'>Click for Look Angles and doopler factor</span><br>";
+                    scene.config.layers.orbit.properties.hovered = feature.properties.id;
+                    reloadTangram();
                 }
 
                 if (label != '') {
@@ -230,7 +235,10 @@ function initFeatureSelection () {
                     for (var key in moreInfo.angles) {
                         label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">"+key+" : "+moreInfo.angles[key]+"</span><br>";
                     }
-                    label += "<span class='labelLine' key=doopler value="+moreInfo.doopler+">doopler factor: "+moreInfo.doopler+"</span><br>";               
+                    label += "<span class='labelLine' key=doopler value="+moreInfo.doopler+">doopler factor: "+moreInfo.doopler+"</span><br>";
+                    scene.config.layers.orbit.properties.hovered = feature.properties.id;
+                    reloadTangram();
+                    last_selected = feature.properties.id;
                 }
 
                 if (label != '') {

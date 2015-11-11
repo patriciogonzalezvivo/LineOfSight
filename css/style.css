@@ -1,15 +1,14 @@
 body {
-    font-family: 'Orbitron', Helvetica, Arial;
     margin: 0px;
     border: 0px;
     padding: 0px;
 }
 
 #map {
+    position: absolute;
     background: black;
     height: 100%;
     width: 100%;
-    position: absolute;
     z-index: 0;
 }
 
@@ -204,11 +203,8 @@ div#coorner-bottom-right {
 
 img#target {
     position: absolute;
-    position: absolute;
     top: 50%;
     left: 50%;
-    width: 588px;
-    height: 588px;
     margin-left: -294px;
     margin-top: -294px;
     z-index: 104;

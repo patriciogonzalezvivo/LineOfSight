@@ -17,6 +17,7 @@ layers:
         data: { source: orbits }
         properties: 
             active_types: "visible"
+            hovered: -1
         filter: |
                 function () {
                     var types = properties.active_types.split(" ");
@@ -33,7 +34,8 @@ layers:
                 order: 10
                 color: |
                     function(){
-                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.height/20000 ]; 
+                        var hovered = feature.id === properties.hovered ? 0 : 1;
+                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, hovered ]; 
                     }
                 width: [ [1,3px], [20,180px]]
                 extrude: function () { return feature.height * 1000; }
@@ -385,19 +387,25 @@ styles:
                     st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
 
                     // Line
-                    color = vec4(vec3(.9,.9,.5),pulse(v_texcoord.x,.5,.05)*.6);
+                    vec3 line = vec3(.7);
+                    vec3 satellite = vec3(.7,.7,.5);
+                    if (v_color.b < .5) {
+                        line = vec3(1.,1.,.3);
+                        satellite = vec3(1.,1.,.0);
+                    }
+                    color = vec4(line,pulse(v_texcoord.x,.5,.05)*.6);
 
                     // Bounding Box
                     float spot = 0.;
                     st += .5;
                     spot = max(rect(st,0.02)-rect(st,0.015)-cross(st,.04,.05),0.);
-                    color.rgb = mix(color.rgb, vec3(0.), spot);
-                    color.a += spot;
+                    color.rgb = mix(color.rgb, vec3(1.), spot);
+                    color.a += spot*.9;
 
                     // Satellite
                     st -= .5;
-                    st *= 2.-v_color.b;
+                    st *= 1.+v_color.b;
                     spot = rect(st+.5,0.002);
                     //spot = cross(st+.5,0.01,0.0025);
-                    color.rgb = mix(color.rgb, vec3(1.), spot);
+                    color.rgb = mix(color.rgb, satellite, spot);
                     color.a += spot;
