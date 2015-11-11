@@ -122,9 +122,9 @@ body {
 #loc {
     background-color: rgba(0,0,0,0.4);
     display: table;
-    font-size: 18px;
+    font-size: 14px;
     margin: 0px auto 0px auto;
-    padding: 5px;
+    /*padding: 5px;*/
 }
 
 #loc span{
