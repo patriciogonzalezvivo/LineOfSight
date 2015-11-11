@@ -38,7 +38,7 @@ layers:
                 order: 10
                 color: |
                     function(){
-                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.id/20000 ]; 
+                        return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.height/20000 ]; 
                     }
                 width: [ [0,10px], [20,150px]]
                 extrude: function () { return feature.height * 1000; }
@@ -378,28 +378,34 @@ styles:
                     }
 
                     float getIndex (vec2 encodedIndex) {
-                        return ((encodedIndex.x*255.)*255.+(encodedIndex.y*255.))+.5;
+                        return (encodedIndex.x*65025.+encodedIndex.y*255.)+.5;
+                    }
+
+                    float decode (vec3 value) {
+                        return ((value.x*255.)+(value.y*255.*255.)+(value.z*255.*255.*255.))/16581375.;
+                    }
+
+                    vec2 getCoords (vec2 st) {
+                        vec3 lon = texture2D(u_data,st*vec2(.5,1.)).xyz;
+                        vec3 lat = texture2D(u_data,st*vec2(.5,1.)+vec2(.5,0.)).xyz;
+                        return vec2(decode(lon), decode(lat));
                     }
 
                     // Return normalized values for lat, lon and height, and angle in radiants
-                    vec4 getPosFor(float index, float time) {
-                        float offsetX = ((time+u_param.w)/u_param.z);
-                        vec3 posA = texture2D(u_data,vec2(offsetX/u_param.x,1.-index/u_param.y)).xyz;
-                        vec3 posB = texture2D(u_data,vec2((offsetX+1.)/u_param.x,1.-index/u_param.y)).xyz;
+                    vec3 getPosFor (float index, float time) {
+                        float offsetX = (time+u_param.w)/u_param.z;
+                        vec2 posA = getCoords(vec2(offsetX/u_param.x,1.-index/u_param.y));
+                        vec2 posB = getCoords(vec2((offsetX+1.)/u_param.x,1.-index/u_param.y));
                         vec2 dist = normalize(posB.xy-posA.xy);
-                        return vec4( mix(posA,posB,fract(offsetX)) ,atan(dist.y,dist.x));
+                        return vec3(mix(posA,posB,fract(offsetX)),atan(dist.y,dist.x));
                     }
-
-                    float lat2y_m (float lat) { return EARTH_RADIUS*log(tan(QUATER_PI+deg2rad(lat)/2.0)); }
-                    float lon2x_m (float lon) { return deg2rad(lon)*EARTH_RADIUS; }
                 color: |
                     // Locate the satellite
                     //===============================
                     float index = getIndex(color.st);
-                    vec4 pos = getPosFor(index,u_time);
+                    vec3 pos = getPosFor(index,u_time);
 
-                    pos.x = lon2x_m(((pos.x*2.)-1.)*180.);
-                    pos.y = lat2y_m(((pos.y*2.)-1.)*90.);
+                    pos.xy = (((pos.xy*2.)-1.)*PI)*EARTH_RADIUS;
 
                     vec2 merc = u_map_position.xy+v_position.xy;
                     vec2 st = (merc-pos.xy)*.0000002;
@@ -420,8 +426,8 @@ styles:
 
                     // Satellite
                     st -= .5;
-                    st *= 2.-(clamp(pos.z,0.,1.));
-                    st = (rotate2D(pos.w) * st)+.5;
+                    st *= 2.-v_color.b;
+                    st = (rotate2D(pos.z) * st)+.5;
                     spot = rect(st,0.005);
                     color.rgb = mix(color.rgb, vec3(1.), spot);
                     color.a += spot;

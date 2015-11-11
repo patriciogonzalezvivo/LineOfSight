@@ -153,7 +153,7 @@ function initOrbit() {
     startTime = new Date();
     addOrbitToTangramSource('orbits', satellites, samplesStep, samplesTotal, timeOffset);
 
-    window.setTimeout( function() {
+    // window.setTimeout( function() {
         var gl = scene.gl;
         var floatTextures = gl.getExtension('OES_texture_float');
         if (!floatTextures) {
@@ -165,42 +165,72 @@ function initOrbit() {
         
         var width = samplesTotal;
         var height = satellites.length;
-        
-        var uniforms = {};
-        uniforms.u_data = {};
 
-        var pixels = new Float32Array(width*height*4);
-
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-
-                var index = (y*width+x)*4;
-                pixels[index] = .5+(satellites[y].track[x].ln/180)*.5;
-                pixels[index+1] = .5+(satellites[y].track[x].lt/90)*.5;
-                pixels[index+2] = satellites[y].track[x].h/2000;
-                pixels[index+3] = 1;
+        var canvas = document.createElement("canvas");
+        canvas.width = width*2;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        var imageData = ctx.getImageData(0, 0, width*2, height);
+        var data = imageData.data;
+        var index, lat, lat3, lon, lon3, x, y;
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width*2; x++) {
+                index = (y*(width*2)+x)*4;
+                if (x < width) {
+                    // LON
+                    lon = ((180+satellites[y].track[x].ln)/360);
+                    lon3 = encode(lon*16581375);
+                    data[index] = lon3[0];
+                    data[index+1] = lon3[1];
+                    data[index+2] = lon3[2];
+                    data[index+3] = 255;
+                } else {
+                    // LAT
+                    lat = (.5+(lat2y(satellites[y].track[x-width].lt)/180)*.5);
+                    lat3 = encode(lat*16581375);
+                    data[index] = lat3[0];
+                    data[index+1] = lat3[1];
+                    data[index+2] = lat3[2];
+                    data[index+3] = 255;
+                }
             }
         }
-        var texture = scene.styles.orbit.program.uniforms.u_data;
-        gl.activeTexture(gl.TEXTURE0);
-        // gl.bindTexture(gl.TEXTURE_2D, 0);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texImage2D(
-            gl.TEXTURE_2D, // target
-            0, // mip level
-            gl.RGBA, // internal format
-            width, height, // width and height
-            0, // border
-            gl.RGBA, //format
-            gl.FLOAT, // type
-            pixels // texture data
-        );
-        // gl.bindTexture(gl.TEXTURE_2D, null);
+        ctx.putImageData(imageData, 0, 0);
+        scene.styles.orbit.shaders.uniforms.u_data = canvas.toDataURL();
         reloadTangram();
-    },3000);
+        
+    //     var uniforms = {};
+    //     uniforms.u_data = {};
+    //     var pixels = new Float32Array(width*height*4);
+    //     for (var y = 0; y < height; y++) {
+    //         for (var x = 0; x < width; x++) {
+    //             var index = (y*width+x)*4;
+    //             pixels[index] = .5+(satellites[y].track[x].ln/180)*.5;
+    //             pixels[index+1] = .5+(lat2y(satellites[y].track[x].lt)/180)*.5;
+    //             pixels[index+2] = satellites[y].track[x].h/2000;
+    //             pixels[index+3] = 1;
+    //         }
+    //     }
+    //     var texture = scene.styles.orbit.program.uniforms.u_data;
+    //     gl.activeTexture(gl.TEXTURE0);
+    //     // gl.bindTexture(gl.TEXTURE_2D, 0);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    //     gl.texImage2D(
+    //         gl.TEXTURE_2D, // target
+    //         0, // mip level
+    //         gl.RGBA, // internal format
+    //         width, height, // width and height
+    //         0, // border
+    //         gl.RGBA, //format
+    //         gl.FLOAT, // type
+    //         pixels // texture data
+    //     );
+    //     // gl.bindTexture(gl.TEXTURE_2D, null);
+    //     reloadTangram();
+    // },3000);
 }
 
 function initHUD() {
@@ -238,6 +268,14 @@ function reloadTangram() {
 }
 
 // ============================================= Helpers
+function encode(value) {
+    return [
+        Math.floor(value%255),
+        Math.floor(value/255)%255,
+        Math.floor(value/(255*255))
+    ];
+}
+
 function lat2y(a) { return 180/Math.PI * Math.log(Math.tan(Math.PI/4+a*(Math.PI/180)/2)); }
 
 function parseQuery (qstr) {
