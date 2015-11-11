@@ -4,24 +4,7 @@
 var createObjectURL = (window.URL && window.URL.createObjectURL) || (window.webkitURL && window.webkitURL.createObjectURL);
 var idCounter = -1;
 
-function getHttp (url, callback) {
-    var request = new XMLHttpRequest();
-    var method = 'GET';
-
-    request.onreadystatechange = function () {
-        if (request.readyState === 4 && request.status === 200) {
-            var response = request.responseText;
-
-            // TODO: Actual error handling
-            var error = null;
-            callback(error, response);
-        }
-    };
-    request.open(method, url, true);
-    request.send();
-}
-
-function getEmptyFeature(sat) {
+function makeFeature(sat) {
     sat.type = sat.type ? sat.type : "---";
     sat.state = sat.state ? sat.state: "operational"
     var obj = {
@@ -108,7 +91,7 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
     idCounter++;
 
     // Add coordinates of the orbit to a feature on the JSON
-    var featureA = getEmptyFeature(sat);
+    var featureA = makeFeature(sat);
     featureA.properties.height = sat.track[0].h; 
     var i = 0;
     var prevLon = sat.track[0].ln;
@@ -126,7 +109,7 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
     features.push(featureA);
 
     if (i < sat.track.length) {
-        var featureB = getEmptyFeature(sat);
+        var featureB = makeFeature(sat);
         featureB.properties.height = sat.track[i].h;
         while (i < sat.track.length) {
             featureB.geometry.coordinates.push([sat.track[i].ln+360, sat.track[i].lt]);
@@ -138,14 +121,14 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
 }
 
 // Add a orbit to a geoJSON file
-function addOrbitToTangramSource(sourceName, sat, samplesStep, samplesTotal, timeOffset) {
+function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal, timeOffset) {
     var features = [];
-    if (Array.isArray(sat)){
-        for (s of sat){
-            getOrbitFeatures(s, features, samplesStep, samplesTotal, timeOffset);
+    if (Array.isArray(satData)){
+        for (sat of satData){
+            getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset);
         }
     } else {
-        getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset);
+        getOrbitFeatures(satData, features, samplesStep, samplesTotal, timeOffset);
     }
 
     // Get the geoJSON to add the orbit to
@@ -166,4 +149,70 @@ function addOrbitToTangramSource(sourceName, sat, samplesStep, samplesTotal, tim
         scene.config.sources[sourceName].url = createObjectURL(new Blob([content]));
         scene.rebuild();
     });
+}
+
+function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
+    var width = samplesTotal;
+    var height = satData.length;
+
+    var canvas = document.createElement("canvas");
+    canvas.width = width*2;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d');
+    var imageData = ctx.getImageData(0, 0, width*2, height);
+    var data = imageData.data;
+    var index, lat, lat3, lon, lon3, x, y;
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width*2; x++) {
+            index = (y*(width*2)+x)*4;
+            if (x < width) {
+                // LON
+                lon = ((180+satData[y].track[x].ln)/360);
+                lon3 = encode(lon*16581375);
+                data[index] = lon3[0];
+                data[index+1] = lon3[1];
+                data[index+2] = lon3[2];
+                data[index+3] = 255;
+            } else {
+                // LAT
+                lat = (.5+(lat2y(satData[y].track[x-width].lt)/180)*.5);
+                lat3 = encode(lat*16581375);
+                data[index] = lat3[0];
+                data[index+1] = lat3[1];
+                data[index+2] = lat3[2];
+                data[index+3] = 255;
+            }
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    scene.styles[styleName].shaders.uniforms[imageName] = canvas.toDataURL();
+    scene.rebuild();
+}
+
+// ============================================= Helpers
+function encode(value) {
+    return [
+        Math.floor(value%255),
+        Math.floor(value/255)%255,
+        Math.floor(value/(255*255))
+    ];
+}
+
+function lat2y(a) { return 180/Math.PI * Math.log(Math.tan(Math.PI/4+a*(Math.PI/180)/2)); }
+
+function getHttp (url, callback) {
+    var request = new XMLHttpRequest();
+    var method = 'GET';
+
+    request.onreadystatechange = function () {
+        if (request.readyState === 4 && request.status === 200) {
+            var response = request.responseText;
+
+            // TODO: Actual error handling
+            var error = null;
+            callback(error, response);
+        }
+    };
+    request.open(method, url, true);
+    request.send();
 }

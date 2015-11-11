@@ -16,7 +16,7 @@ layers:
     orbit:
         data: { source: orbits }
         properties: 
-            active_types: "amateur navigation stations visible weather"
+            active_types: "visible"
         filter: |
                 function () {
                     var types = properties.active_types.split(" ");
@@ -28,19 +28,14 @@ layers:
                     return false;
                 }
         draw:
-            lines:
-                interactive: true
-                order: 0
-                color: [.5, .5, .5, .0]
-                width: 10px
-                extrude: function () { return feature.height * 1000; }
             orbit:
+                interactive: true
                 order: 10
                 color: |
                     function(){
                         return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, feature.height/20000 ]; 
                     }
-                width: [ [0,10px], [20,150px]]
+                width: [ [1,3px], [20,180px]]
                 extrude: function () { return feature.height * 1000; }
     earth:
         data: { source: osm }
