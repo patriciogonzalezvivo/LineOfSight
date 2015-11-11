@@ -55,54 +55,43 @@ layers:
             area:
                 order: 3
                 color: gray
-    buildings:
-        data: { source: osm }
-        draw:
-            polygons:
-                order: 50
-                color: '#999'
-        extruded:
-            draw:
-                polygons:
-                    style: buildings
-                    extrude: function () { return feature.height > 0 || $zoom >= 16; }
     roads:
         data: { source: osm, layer: roads }
         filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
         draw:
             lines:
                 order: 7
-                color: [.5,.5,.5]
+                color: [.7,.7,.7]
                 width: [[6,0px], [7,.25px], [10, .5px], [15, .75px], [17, 5m]]
         highway:
             filter: { kind: highway }
             draw:
                 lines:
                     order: 8
-                    color: [.6,.6,.6]#[1.000,0.897,0.058]
+                    color: [.8,.8,.8]#[1.000,0.897,0.058]
                     width: [[1,0px], [6,.25px], [11, 2px], [14, 3px], [16, 4px], [17, 10m]]
             link:
                 filter: { is_link: yes } # on- and off-ramps, etc
                 draw:
                     lines:
-                        color: [.5,.5,.5]#[1.000,0.933,0.710]
+                        color: [.7,.7,.7]#[1.000,0.933,0.710]
                         width: [[10,0px], [14, 3px], [16, 5px], [18, 10m]]
                 tunnel-link:
                     filter: {is_tunnel: yes, $zoom: {min: 13} }
                     draw:
                         lines:
-                            color: [.3,.3,.3]#[0.805,0.748,0.557]
+                            color: [.5,.5,.5]#[0.805,0.748,0.557]
             tunnel:
                 filter: {is_tunnel: yes, $zoom: {min: 13} }
                 draw:
                     lines:
                         order: 5
-                        color: [.3,.3,.3]#[0.805,0.748,0.557]
+                        color: [.5,.5,.5]#[0.805,0.748,0.557]
         major_road:
             filter: { kind: major_road }
             draw:
                 lines:
-                    color: [[13, [.4,.4,.4]], [17, white]]
+                    color: [[13, [.6,.6,.6]], [17, white]]
                     width: [[1,0px], [6,.5px], [11,1px], [14, 2px], [16, 2.5px], [19, 8m]]
                     primary:
                         filter: { highway: primary }
@@ -340,12 +329,6 @@ styles:
                 filter: |
                     float SatOsmPct = pow(1.-map(u_map_position.z,6.,9.,0.,1.),5.0);
                     color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
-    buildings:
-        base: polygons
-        shaders:
-            blocks:
-                color: |
-                    color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
     orbit:
         base: lines
         mix: [geometry-matrices, functions-map, shapes-cross]
@@ -402,7 +385,7 @@ styles:
                     st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
 
                     // Line
-                    color = vec4(vec3(.9),pulse(v_texcoord.x,.5,.05)*.5);
+                    color = vec4(vec3(.9,.9,.5),pulse(v_texcoord.x,.5,.05)*.6);
 
                     // Bounding Box
                     float spot = 0.;
@@ -414,6 +397,7 @@ styles:
                     // Satellite
                     st -= .5;
                     st *= 2.-v_color.b;
-                    spot = rect(st+.5,0.001);
+                    spot = rect(st+.5,0.002);
+                    //spot = cross(st+.5,0.01,0.0025);
                     color.rgb = mix(color.rgb, vec3(1.), spot);
                     color.a += spot;

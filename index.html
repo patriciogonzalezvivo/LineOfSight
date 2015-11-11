@@ -11,8 +11,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>InvisibleTracks</title>
+
     <link rel="stylesheet" href="css/leaflet.css" />
     <link href='https://fonts.googleapis.com/css?family=Jura:400,300,600,500&subset=latin,cyrillic-ext,greek,latin-ext,cyrillic' rel='stylesheet' type='text/css'>
+
     <link type='text/css' rel='stylesheet' href="css/style.css">
   </head>
 
@@ -21,6 +23,18 @@
 
     <div id="types" style="position: absolute;" >
     </div>
+
+    <div id="left-info" style="position: absolute;" >
+        <p id="left-lat">LAT</p>
+        <p id="left-lng">LNG</p>
+        <p id="left-elv">ELV</p>
+    </div>
+
+    <div id="info" style="position: absolute;" >
+        <p id="loc"><span>|</span></p>
+    </div>
+
+    <!-- <img id="target" src="imgs/target.svg"/> -->
 
     <!-- 3rd party libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0-beta.2/leaflet.js"></script>

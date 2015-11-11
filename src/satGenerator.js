@@ -120,6 +120,57 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
     return features;
 }
 
+function getObserveCoords(sat, lon, lat) {
+ 
+    var now = new Date();
+    // NOTE: while Javascript Date returns months in range 0-11, all satellite.js methods require
+    // months in range 1-12.
+    var positionAndVelocity = satellite.propagate(
+        sat.satrec,
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+    );
+
+    // The position_velocity result is a key-value pair of ECI coordinates.
+    // These are the base results from which all other coordinates are derived.
+    var positionEci = positionAndVelocity.position,
+        velocityEci = positionAndVelocity.velocity;
+
+    // You will need GMST for some of the coordinate transforms.
+    // http://en.wikipedia.org/wiki/Sidereal_time#Definition
+    // NOTE: GMST, though a measure of time, is defined as an angle in radians.
+    // Also, be aware that the month range is 1-12, not 0-11.
+    var gmst = satellite.gstimeFromDate(
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+    );
+
+    // Set the Observer at 122.03 West by 36.96 North, in RADIANS
+    var observerGd = {
+        longitude: lon * .017453292519943295,
+        latitude: lat * .017453292519943295,
+        height: 0.370
+    };
+
+    var positionEcf   = satellite.eciToEcf(positionEci, gmst),
+        velocityEcf   = satellite.eciToEcf(velocityEci, gmst),
+        observerEcf   = satellite.geodeticToEcf(observerGd),
+        positionGd    = satellite.eciToGeodetic(positionEci, gmst),
+        lookAngles    = satellite.ecfToLookAngles(observerGd, positionEcf),
+        dopplerFactor = satellite.dopplerFactor(observerEcf, positionEcf, velocityEcf);
+
+    return { angles: lookAngles, doopler: dopplerFactor }
+}
+// ==================================================
+
 // Add a orbit to a geoJSON file
 function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal, timeOffset) {
     var features = [];
