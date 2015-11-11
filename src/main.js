@@ -3,7 +3,7 @@
 // GLOBAL PARAMETERS
 //==========================
 var samplesTotal = 300;
-var samplesStep = 20;
+var samplesStep = 5;
 var timeOffset = 120;
 var startTime = 0;
 
@@ -31,6 +31,7 @@ map = (function () {
 
     // Leaflet Map
     var map = L.map('map',{
+        minZoom: 4,
         maxZoom: 20,
         trackResize: true,
         keyboard: false

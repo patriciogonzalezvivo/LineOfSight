@@ -130,7 +130,6 @@ layers:
             draw:
                 spline:
                     order: function() {return 6 + feature.sort_key;}
-
 cameras:
     perspective:
         type: perspective
@@ -356,13 +355,11 @@ styles:
         blend: overlay
         shaders:
             defines:
-                TWO_PI: 6.283185307
                 PI: 3.1415926535897932384626433832795
                 HALF_PI: 1.5707963267948966192313216916398
                 QUATER_PI: .785398163
+                TWO_PI: 6.283185307
                 EARTH_RADIUS: 6378137.0
-                deg2rad(d): (((d)*3.1415926535897932384626433832795)/180.0)
-                rad2deg(d): (((d)*180.0)/3.1415926535897932384626433832795)
             uniforms:
                 u_data: data/orbits.png
                 u_param: [0,0,0,0]
@@ -377,37 +374,32 @@ styles:
                     }
 
                     float decode (vec3 value) {
-                        return ((value.x*255.)+(value.y*255.*255.)+(value.z*255.*255.*255.))/16581375.;
+                        return ((value.x*255.)+(value.y*65025.)+(value.z*16581375.))/16581375.;
                     }
 
                     vec2 getCoords (vec2 st) {
-                        vec3 lon = texture2D(u_data,st*vec2(.5,1.)).xyz;
-                        vec3 lat = texture2D(u_data,st*vec2(.5,1.)+vec2(.5,0.)).xyz;
+                        float texWidth = (u_param.x*2.);
+                        float texHeigth = u_param.y;
+                        st.y = 1.-st.y/texHeigth;
+                        vec3 lon = texture2D(u_data,vec2(st.x/texWidth,st.y)).xyz;
+                        vec3 lat = texture2D(u_data,vec2(st.x/texWidth+.5,st.y)).xyz;
                         return vec2(decode(lon), decode(lat));
                     }
 
                     // Return normalized values for lat, lon and height, and angle in radiants
-                    vec3 getPosFor (float index, float time) {
-                        float offsetX = (time+u_param.w)/u_param.z;
-                        vec2 posA = getCoords(vec2(offsetX/u_param.x,1.-index/u_param.y));
-                        vec2 posB = getCoords(vec2((offsetX+1.)/u_param.x,1.-index/u_param.y));
-                        vec2 dist = normalize(posB.xy-posA.xy);
-                        return vec3(mix(posA,posB,fract(offsetX)),atan(dist.y,dist.x));
+                    vec2 getPosFor (float index, float time) {
+                        float col = (time+u_param.w)/u_param.z;
+                        return vec2(getCoords(vec2(col,index)));
                     }
                 color: |
                     // Locate the satellite
                     //===============================
                     float index = getIndex(color.st);
-                    vec3 pos = getPosFor(index,u_time);
-
-                    pos.xy = (((pos.xy*2.)-1.)*PI)*EARTH_RADIUS;
-
-                    vec2 merc = u_map_position.xy+v_position.xy;
-                    vec2 st = (merc-pos.xy)*.0000002;
+                    vec2 pos = getPosFor(index,u_time);
+                    pos = (((pos*2.)-1.)*PI)*EARTH_RADIUS;
+                    vec2 worldPos = u_map_position.xy+v_position.xy;
+                    vec2 st = (worldPos-pos)*.0000002;
                     st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
-
-                    // Draw stuff
-                    //===============================
 
                     // Line
                     color = vec4(vec3(.9),pulse(v_texcoord.x,.5,.05)*.5);
@@ -422,7 +414,6 @@ styles:
                     // Satellite
                     st -= .5;
                     st *= 2.-v_color.b;
-                    st = (rotate2D(pos.z) * st)+.5;
-                    spot = rect(st,0.005);
+                    spot = rect(st+.5,0.001);
                     color.rgb = mix(color.rgb, vec3(1.), spot);
                     color.a += spot;
