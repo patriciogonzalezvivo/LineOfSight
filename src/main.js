@@ -132,7 +132,7 @@ function initHUD() {
 
     if ( library === 'curated') {
         typesDOM.innerHTML += '<hr/>';
-        typesDOM.innerHTML += '<hr/><a style="color: white; text-decoration: none;" href="http://patriciogonzalezvivo.github.io/LineOfSight/?load=all"><span style="color: white; text-decoration: none;">load all...</span></a>';
+        typesDOM.innerHTML += '<hr/><a style="color: white; text-decoration: none;" href="http://patriciogonzalezvivo.github.io/LineOfSight/?load=all"><span style="color: white; text-decoration: none;">load more...</span></a>';
     }
     
     document.getElementById('types').addEventListener('click', function( event ) {
