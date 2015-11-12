@@ -207,7 +207,7 @@ img#target {
     left: 50%;
     margin-left: -294px;
     margin-top: -294px;
-    z-index: 104;
+    z-index: 100;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;

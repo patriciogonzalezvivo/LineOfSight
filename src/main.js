@@ -2,7 +2,8 @@
 
 // GLOBAL PARAMETERS
 //==========================
-var samplesTotal = 300;
+var defaultTime = 3600; // seconds -> 1 hr
+var samplesTotal = 300; // n of samples
 var samplesStep = 20; // seconds
 var timeOffset = 120; // seconds
 var startTime = 0;
@@ -35,12 +36,13 @@ map = (function () {
     var query = parseQuery(window.location.search.slice(1));
     library = query['load'] ? query['load'] : 'curated';
     samplesStep = query['step'] ? query['step'] : samplesStep;
-    samplesTotal = query['sec'] ? query['sec']/samplesStep : 6000/samplesStep;
     timeOffset = query['offset'] ? query['offset'] : timeOffset;
+    samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
+    
 
     // Leaflet Map
     var map = L.map('map',{
-        minZoom: 4,
+        minZoom: 3,
         maxZoom: 11,
         trackResize: true,
         keyboard: false,
@@ -172,15 +174,15 @@ function initFeatureSelection () {
                         return;
                     }
                     var obj = JSON.parse(JSON.stringify(feature.properties));
-                    label = "<span class='title'>"+feature.properties.name+"</span><br><div class='hr'><hr />";
+                    label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
                     for (var key in feature.properties) {
                         // Ignore the kind and id
                         if (key === 'kind' || key === 'id' || key === 'name') continue;
 
                         var val = feature.properties[key]
-                        label += "<span class='labelLine' key="+key+" value="+val+">"+key+" : "+val+"</span><br>"
+                        label += "<span class='labelLine' key="+key+" value="+val+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+val+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>"
                     }
-                    label += "<div class='hr'><hr /><span class='labelLine'>Click for Look Angles and doopler factor</span><br>";
+                    label += "<div class='hr'><hr /><span class='labelLine' stype='text-align:center;'>&nbsp;&nbsp;Click for look angles&nbsp;&nbsp;</span><br>";
                     scene.config.layers.orbit.properties.hovered = feature.properties.id;
                     reloadTangram();
                 }
@@ -223,19 +225,27 @@ function initFeatureSelection () {
                 var label = '';
                 if (feature.properties != null) {
                     var obj = JSON.parse(JSON.stringify(feature.properties));
-                    label = "<span class='title'>"+feature.properties.name+"</span><br><div class='hr'><hr />";
+                    label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
                     for (var key in feature.properties) {
                         // Ignore the kind and id
                         if (key === 'kind' || key === 'id' || key === 'name') continue;
-                        label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">"+key+" : "+feature.properties[key]+"</span><br>";
+                        label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                     }
                     label += "<div class='hr'><hr />";
-                    mapCenter = map.getCenter();
+                    updatePosition();
                     var moreInfo = getObserveCoords(satellites[feature.properties.id], mapCenter.lng, mapCenter.lat);
+                    label += "<span class='labelLine'>&nbsp;&nbsp;Look angles:</span><br>";
                     for (var key in moreInfo.angles) {
-                        label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">"+key+" : "+moreInfo.angles[key]+"</span><br>";
+                        label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                     }
-                    label += "<span class='labelLine' key=doopler value="+moreInfo.doopler+">doopler factor: "+moreInfo.doopler+"</span><br>";
+                    // label += "<span class='labelLine' key=doopler value="+moreInfo.doopler+">doopler factor: "+moreInfo.doopler.toFixed(4)+"</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                    console.log(mapCenter);
+                    if (mapCenter.elevation) {
+                        label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;alt: "+mapCenter.elevation.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                    }
                     scene.config.layers.orbit.properties.hovered = feature.properties.id;
                     reloadTangram();
                     last_selected = feature.properties.id;
@@ -284,7 +294,7 @@ function updatePosition() {
             mapCenter.elevation = elevation.height[0];
             document.getElementById('left-lat').innerHTML = "LAT " + mapCenter.lat.toFixed(4);
             document.getElementById('left-lng').innerHTML = "LNG " + mapCenter.lng.toFixed(4);
-            document.getElementById('left-elv').innerHTML = "ELV " + mapCenter.elevation.toFixed(1);
+            document.getElementById('left-elv').innerHTML = "ALT " + mapCenter.elevation.toFixed(1);
         }
     });
 }
