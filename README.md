@@ -20,7 +20,7 @@ See what satellites are in your line of sight.
 
  - By clicking on the orbits or waiting a second, more information will show telling you what are the angles (azimuth and elevation) you should look at. Together with some information about the range and doopler factor.
 
-![](imgs/03-click.gif)
+![](imgs/03-click.png)
 
 ## Resources
 
