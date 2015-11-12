@@ -389,9 +389,11 @@ styles:
                     // Line
                     vec3 line = vec3(.7);
                     vec3 satellite = vec3(.7,.7,.5);
+                    vec3 bbox = vec3(0.);
                     if (v_color.b < .5) {
                         line = vec3(1.,1.,.3);
                         satellite = vec3(1.,1.,.0);
+                        bbox = vec3(1.);
                     }
                     color = vec4(line,pulse(v_texcoord.x,.5,.05)*.6);
 
@@ -399,7 +401,7 @@ styles:
                     float spot = 0.;
                     st += .5;
                     spot = max(rect(st,0.02)-rect(st,0.015)-cross(st,.04,.05),0.);
-                    color.rgb = mix(color.rgb, vec3(1.), spot);
+                    color.rgb = mix(color.rgb, bbox, spot);
                     color.a += spot*.9;
 
                     // Satellite

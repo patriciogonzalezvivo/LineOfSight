@@ -6,7 +6,6 @@ var defaultTime = 3600; // seconds -> 1 hr
 var samplesTotal = 300; // n of samples
 var samplesStep = 20; // seconds
 var timeOffset = 120; // seconds
-var startTime = 0;
 
 // Const
 var EARTH_RADIUS = 6378137.0;
@@ -159,121 +158,94 @@ function initFeatureSelection () {
     // Show selected feature on hover
     map.getContainer().addEventListener('mousemove', function (event) {
         var pixel = { x: event.clientX, y: event.clientY };
-
-        scene.getFeatureAt(pixel).then( function(selection) { 
-            // Return if there is no selection   
-            if (!selection) {
-                return;
-            }
-
-            var feature = selection.feature;
-            if (feature != null) {
-                var label = '';
-                if (feature.properties != null) {
-                    if (last_selected === feature.properties.id ){
-                        return;
-                    }
-                    var obj = JSON.parse(JSON.stringify(feature.properties));
-                    label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
-                    for (var key in feature.properties) {
-                        // Ignore the kind and id
-                        if (key === 'kind' || key === 'id' || key === 'name') continue;
-
-                        var val = feature.properties[key]
-                        label += "<span class='labelLine' key="+key+" value="+val+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+val+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>"
-                    }
-                    label += "<div class='hr'><hr /><span class='labelLine' stype='text-align:center;'>&nbsp;&nbsp;Click for look angles&nbsp;&nbsp;</span><br>";
-                    scene.config.layers.orbit.properties.hovered = feature.properties.id;
-                    reloadTangram();
-                }
-
-                if (label != '') {
-                    selection_info.style.left = (pixel.x + 5) + 'px';
-                    selection_info.style.top = (pixel.y + 15) + 'px';
-                    selection_info.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><span class="labelInner">' + label + '</span>';
-                    map.getContainer().appendChild(selection_info);
-                }
-
-                else if (selection_info.parentNode != null) {
-                    selection_info.parentNode.removeChild(selection_info);
-                }
-            }
-            else if (selection_info.parentNode != null) {
-                selection_info.parentNode.removeChild(selection_info);
-            }
+        scene.getFeatureAt(pixel).then(function(selection){
+            updateSelectedFeature(selection, pixel, false);
+            stopMovement(selection, pixel);
         });
-
-        // Don't show labels while panning
-        if (scene.panning == true) {
-            if (selection_info.parentNode != null) {
-                selection_info.parentNode.removeChild(selection_info);
-            }
-        }
     });
 
     map.getContainer().addEventListener('click', function (event) {
         var pixel = { x: event.clientX, y: event.clientY };
 
-        scene.getFeatureAt(pixel).then( function(selection) { 
-            // Return if there is no selection   
-            if (!selection) {
-                return;
-            }
-
-            var feature = selection.feature;
-            if (feature != null) {
-                var label = '';
-                if (feature.properties != null) {
-                    var obj = JSON.parse(JSON.stringify(feature.properties));
-                    label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
-                    for (var key in feature.properties) {
-                        // Ignore the kind and id
-                        if (key === 'kind' || key === 'id' || key === 'name') continue;
-                        label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                    }
-                    label += "<div class='hr'><hr />";
-                    updatePosition();
-                    var moreInfo = getObserveCoords(satellites[feature.properties.id], mapCenter.lng, mapCenter.lat);
-                    label += "<span class='labelLine'>&nbsp;&nbsp;Look angles:</span><br>";
-                    for (var key in moreInfo.angles) {
-                        label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                    }
-                    // label += "<span class='labelLine' key=doopler value="+moreInfo.doopler+">doopler factor: "+moreInfo.doopler.toFixed(4)+"</span><br>";
-                    label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
-                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
-                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
-                    console.log(mapCenter);
-                    if (mapCenter.elevation) {
-                        label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;alt: "+mapCenter.elevation.toFixed(4)+"&nbsp;&nbsp;</span><br>";
-                    }
-                    scene.config.layers.orbit.properties.hovered = feature.properties.id;
-                    reloadTangram();
-                    last_selected = feature.properties.id;
-                }
-
-                if (label != '') {
-                    selection_info.style.left = (pixel.x + 5) + 'px';
-                    selection_info.style.top = (pixel.y + 15) + 'px';
-                    selection_info.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><span class="labelInner">' + label + '</span>';
-                    map.getContainer().appendChild(selection_info);
-                }
-
-                else if (selection_info.parentNode != null) {
-                    selection_info.parentNode.removeChild(selection_info);
-                }
-            }
-            else if (selection_info.parentNode != null) {
-                selection_info.parentNode.removeChild(selection_info);
-            }
-        });
-
         // Don't show labels while panning
         if (scene.panning == true) {
             if (selection_info.parentNode != null) {
                 selection_info.parentNode.removeChild(selection_info);
             }
+        } else {
+            scene.getFeatureAt(pixel).then(function (selection){
+                updateSelectedFeature(selection, pixel, true);
+            });
         }
     });
+}
+
+var stopMovement = debounce(function(selection, pixel) {
+    updateSelectedFeature(selection, pixel, true);
+}, 500);
+
+function updateSelectedFeature(selection, pixel, moreInfo) {
+    // Return if there is no selection   
+    if (!selection) {
+        return;
+    }
+
+    var feature = selection.feature;
+    if (feature != null) {
+        var label = '';
+        if (feature.properties != null) {
+            var obj = JSON.parse(JSON.stringify(feature.properties));
+            label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
+            for (var key in feature.properties) {
+                // Ignore the kind and id
+                if (key === 'kind' || key === 'id' || key === 'name') continue;
+                if (key === 'height') {
+                    label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key].toFixed(2)+"km&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                } else {
+                    label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";    
+                }
+                
+            }
+            
+            if (last_selected !== feature.properties.id) {
+                scene.config.layers.orbit.properties.hovered = feature.properties.id;
+                reloadTangram();
+                last_selected = feature.properties.id;
+            }
+            
+            if (moreInfo){
+                label += "<div class='hr'><hr />";
+                updatePosition();
+                var moreInfo = getObserveCoords(satellites[feature.properties.id], mapCenter.lng, mapCenter.lat);
+                label += "<span class='labelLine'>&nbsp;&nbsp;Look angles:</span><br>";
+                for (var key in moreInfo.angles) {
+                    label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                }
+                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;doopler factor: "+moreInfo.doopler+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
+                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+
+                if (mapCenter.elevation) {
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;alt: "+mapCenter.elevation.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                }
+            }
+        }
+
+        if (label != '') {
+            selection_info.style.left = (pixel.x + 5) + 'px';
+            selection_info.style.top = (pixel.y + 15) + 'px';
+            selection_info.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><span class="labelInner">' + label + '</span>';
+            map.getContainer().appendChild(selection_info);
+        }
+
+        else if (selection_info.parentNode != null) {
+            selection_info.parentNode.removeChild(selection_info);
+        }
+    }
+    else if (selection_info.parentNode != null) {
+        selection_info.parentNode.removeChild(selection_info);
+    }
 }
 
 function updatePosition() {
@@ -331,10 +303,10 @@ function updateGeocode (lat, lng) {
         var response = JSON.parse(res);
         if (!response.features || response.features.length === 0) {
             // Sometimes reverse geocoding returns no results
-            place = 'Unknown location';
+            place = 'Observer at Unknown location';
         }
         else {
-            place = response.features[0].properties.label;
+            place = 'Observer at'  + response.features[0].properties.label;
         }
     });
 }
@@ -356,3 +328,18 @@ function parseQuery (qstr) {
     }
     return query;
 }
+
+function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+};
