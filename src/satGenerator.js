@@ -1,7 +1,7 @@
 // Depends on satellite.min.js
 // https://github.com/shashwatak/satellite-js
 
-var createObjectURL = (window.webkitURL && window.webkitURL.createObjectURL) || (window.URL && window.URL.createObjectURL);
+var createObjectURL =  (window.URL && window.URL.createObjectURL) || (window.webkitURL && window.webkitURL.createObjectURL);
 var idCounter = -1;
 
 function makeFeature(sat) {
@@ -236,7 +236,6 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
         }
     }
     ctx.putImageData(imageData, 0, 0);
-    console.log(canvas);
     scene.styles[styleName].shaders.uniforms[imageName] = canvas.toDataURL('image/png');
     scene.rebuild();
 }

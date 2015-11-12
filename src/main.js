@@ -66,29 +66,23 @@ map = (function () {
     map.setView(map_start_location.slice(0, 2), map_start_location[2]);
     var hash = new L.Hash(map);
 
-     // Resize map to window
-    function resizeMap() {
-        document.getElementById('map').style.width = window.innerWidth + 'px';
-        document.getElementById('map').style.height = window.innerHeight + 'px';
-        map.invalidateSize(false);
-    }
-    window.addEventListener('resize', resizeMap);
-    resizeMap();
-
     /***** Render loop *****/
     window.addEventListener('load', function () {
         init();
-        initFeatureSelection();
     });
-
-    map.on('dragend', function () {
-        updatePosition();
-    });
-
     return map;
 }());
 
 function init() {
+
+    // On resize
+    window.addEventListener('resize', resizeMap);    
+
+    // On drag
+    map.on('dragend', function () {
+        updatePosition();
+    });
+
     // Scene initialized
     layer.on('init', function() {
         // Get the geoJSON to add the orbit to
@@ -108,10 +102,12 @@ function init() {
             types = JSON.parse(res);
             initHUD();
         });
+        initFeatureSelection();
     });
     layer.addTo(map);
+    resizeMap();
     updatePosition();
-    updateLocation("");
+    updateLocation("");    
 }
 
 function initOrbit() {
@@ -180,6 +176,14 @@ function initFeatureSelection () {
     });
 }
 
+//=========================================================== Update 
+
+// Resize map to window
+function resizeMap() {
+    document.getElementById('map').style.width = window.innerWidth + 'px';
+    document.getElementById('map').style.height = window.innerHeight + 'px';
+    map.invalidateSize(false);
+}
 var stopMovement = debounce(function(selection, pixel) {
     updateSelectedFeature(selection, pixel, true);
 }, 500);
