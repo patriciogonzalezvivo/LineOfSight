@@ -79,7 +79,7 @@ function init() {
     window.addEventListener('resize', resizeMap);    
 
     // On drag
-    map.on('dragend', function () {
+    map.on('moveend', function () {
         updatePosition();
     });
 
@@ -119,16 +119,22 @@ function initOrbit() {
 
 function initHUD() {
     var typesDOM = document.getElementById('types');
-    typesDOM.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><p class="title" >Types</p> <div class="hr"><hr /></div>'
+    typesDOM.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div>';
+    typesDOM.innerHTML += '<span class="title" >Types</span><hr/>';
 
     for (var type of types) {
         var stt = '';
         if (type.visible === true) {
             stt = 'checked';
         }
-        typesDOM.innerHTML = typesDOM.innerHTML+ '<input type="checkbox" name="checkbox-option" id="checkbox-'+type.name+'" class="hide-checkbox" value="'+type.name+'" '+stt+'><label for="checkbox-'+type.name+'">'+type.label+'</label>';
+        typesDOM.innerHTML += '<input type="checkbox" name="checkbox-option" id="checkbox-'+type.name+'" class="hide-checkbox" value="'+type.name+'" '+stt+'><label for="checkbox-'+type.name+'">'+type.label+'</label>';
     }
 
+    if ( library === 'curated') {
+        typesDOM.innerHTML += '<hr/>';
+        typesDOM.innerHTML += '<hr/><a style="color: white; text-decoration: none;" href="http://patriciogonzalezvivo.github.io/LineOfSight/?load=all"><span style="color: white; text-decoration: none;">load all...</span></a>';
+    }
+    
     document.getElementById('types').addEventListener('click', function( event ) {
         var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
         var active_types = '';
@@ -231,7 +237,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                 label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
 
                 if (mapCenter.elevation) {
-                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;alt: "+mapCenter.elevation.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;elevation: "+mapCenter.elevation.toFixed(1)+"m&nbsp;&nbsp;</span><br>";
                 }
             }
         }
@@ -268,24 +274,25 @@ function updatePosition() {
             elevation.height !== undefined &&
             elevation.height.length >= 0) {
             mapCenter.elevation = elevation.height[0];
-            document.getElementById('left-lat').innerHTML = "LAT " + mapCenter.lat.toFixed(4);
-            document.getElementById('left-lng').innerHTML = "LNG " + mapCenter.lng.toFixed(4);
-            document.getElementById('left-elv').innerHTML = "ALT " + mapCenter.elevation.toFixed(1);
+            document.getElementById('left-lat').innerHTML = 'LAT ' + mapCenter.lat.toFixed(4);
+            document.getElementById('left-lng').innerHTML = 'LNG ' + mapCenter.lng.toFixed(4);
+            document.getElementById('left-elv').innerHTML = 'ELV ' + mapCenter.elevation.toFixed(1)+'m';
+            document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
         }
     });
 }
 
 function updateLocation(text) {
-    if (placeCounter > text.length || place === "") {
+    if (placeCounter > text.length || place === '') {
         placeCounter = 0;
-        text = "";
+        text = '';
         updateGeocode(mapCenter.lat, mapCenter.lng);
         setTimeout(function(){
-            updateLocation("");
+            updateLocation('');
         }, 3000);
     } else {
         setTimeout( function(){
-            document.getElementById('loc').innerHTML = text + "<span>|</span>"; 
+            document.getElementById('loc').innerHTML = text + '<span>|</span>'; 
             updateLocation(text+place.charAt(placeCounter++));
         }, 100);
     }
@@ -310,7 +317,7 @@ function updateGeocode (lat, lng) {
             place = 'Observer at Unknown location';
         }
         else {
-            place = 'Observer at'  + response.features[0].properties.label;
+            place = 'Observer at '  + response.features[0].properties.label;
         }
     });
 }

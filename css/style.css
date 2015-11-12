@@ -139,10 +139,18 @@ img#target {
     padding: 5px;
 }
 
+/* ELEMENTS */
 .title {
     text-align: center;
     font-weight: bold;
     color: white; 
+    margin-left: 6px;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: rgba(255,255,255,0.5);
 }
 
 .coorner {
