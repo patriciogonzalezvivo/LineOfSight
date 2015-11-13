@@ -208,11 +208,26 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
             label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
             for (var key in feature.properties) {
                 // Ignore the kind and id
-                if (key === 'kind' || key === 'id' || key === 'name') continue;
-                if (key === 'height') {
-                    label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key].toFixed(2)+"km&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                if (key === 'kind' || key === 'id' || key === 'name' || key === 'norad_id') {
+                    continue;
+                } else if (key === 'transmitters') {
+                    if (feature.properties[key].length > 0) {
+                        label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" :</span><br>";
+                        for (var t in feature.properties[key]) {
+                            var trans = feature.properties[key][t];
+                            label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+trans['description']+"</span> (";
+                            for (var elem in trans) {
+                                if (elem !== 'description' && elem !== 'invert' && elem !== 'mode') {
+                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+trans[elem]+"&nbsp;</span>";    
+                                }
+                            }
+                            label += ")&nbsp;&nbsp;<br>";
+                        }
+                    }
+                } else if (key === 'height') {
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key].toFixed(2)+"km&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                 } else {
-                    label += "<span class='labelLine' key="+key+" value="+feature.properties[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";    
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";    
                 }
                 
             }
@@ -277,7 +292,9 @@ function updatePosition() {
             document.getElementById('left-lat').innerHTML = 'LAT ' + mapCenter.lat.toFixed(4);
             document.getElementById('left-lng').innerHTML = 'LNG ' + mapCenter.lng.toFixed(4);
             document.getElementById('left-elv').innerHTML = 'ELV ' + mapCenter.elevation.toFixed(1)+'m';
-            document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
+            if (scene.camera && scene.camera.position_meters) {
+                document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
+            }
         }
     });
 }

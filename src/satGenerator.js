@@ -14,8 +14,10 @@ function makeFeature(sat) {
             coordinates:[]
         },
         properties: { 
-            kind: "orbit", 
+            kind: "orbit",
             name: sat.name,
+            norad_id: sat.norad_id,
+            transmitters: sat.transmitters,
             id: idCounter 
         }
     };
