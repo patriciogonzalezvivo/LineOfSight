@@ -18,6 +18,7 @@ var selection_info, last_selected;
 var mapCenter = {lat: 0, lng: 0, elevation: 0};
 var place = "Select a place on the world and hover over the visible satellites";
 var placeCounter = 0;
+var picking = false;
 
 // ============================================= INIT 
 // Prepair leafleat and tangram
@@ -159,6 +160,7 @@ function initFeatureSelection () {
 
     // Show selected feature on hover
     map.getContainer().addEventListener('mousemove', function (event) {
+        if (picking) return;
         var pixel = { x: event.clientX, y: event.clientY };
         scene.getFeatureAt(pixel).then(function(selection){
             updateSelectedFeature(selection, pixel, false);
@@ -167,6 +169,7 @@ function initFeatureSelection () {
     });
 
     map.getContainer().addEventListener('click', function (event) {
+        picking = !picking;
         var pixel = { x: event.clientX, y: event.clientY };
 
         // Don't show labels while panning
@@ -180,6 +183,11 @@ function initFeatureSelection () {
             });
         }
     });
+
+    // toggle popup picking state
+    map.getContainer().addEventListener('drag', function (event) {
+        picking = false;
+    });
 }
 
 //=========================================================== Update 
@@ -190,15 +198,14 @@ function resizeMap() {
     document.getElementById('map').style.height = window.innerHeight + 'px';
     map.invalidateSize(false);
 }
+
 var stopMovement = debounce(function(selection, pixel) {
     updateSelectedFeature(selection, pixel, true);
 }, 500);
 
 function updateSelectedFeature(selection, pixel, moreInfo) {
     // Return if there is no selection   
-    if (!selection) {
-        return;
-    }
+    if (!selection) { return; }
 
     var feature = selection.feature;
     if (feature != null) {
@@ -207,10 +214,11 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
             var obj = JSON.parse(JSON.stringify(feature.properties));
             label = "<span class='title'>&nbsp;&nbsp;"+feature.properties.name+"</span><br><div class='hr'><hr />";
             for (var key in feature.properties) {
-                // Ignore the kind and id
+                // Ignore the kind, id, name and norad_id
                 if (key === 'kind' || key === 'id' || key === 'name' || key === 'norad_id') {
                     continue;
-                } else if (key === 'transmitters') {
+                } 
+                else if (key === 'transmitters') {
                     if (feature.properties[key].length > 0) {
                         label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" :</span><br>";
                         for (var t in feature.properties[key]) {
@@ -224,12 +232,13 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                             label += ")&nbsp;&nbsp;<br>";
                         }
                     }
-                } else if (key === 'height') {
+                } 
+                else if (key === 'height') {
                     label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key].toFixed(2)+"km&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                } else {
+                } 
+                else {
                     label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";    
                 }
-                
             }
             
             if (last_selected !== feature.properties.id) {
@@ -257,14 +266,12 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
             }
         }
 
-        if (label != '') {
+        if (label !== '') {
             selection_info.style.left = (pixel.x + 5) + 'px';
             selection_info.style.top = (pixel.y + 15) + 'px';
             selection_info.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><span class="labelInner">' + label + '</span>';
             map.getContainer().appendChild(selection_info);
-        }
-
-        else if (selection_info.parentNode != null) {
+        } else if (selection_info.parentNode != null) {
             selection_info.parentNode.removeChild(selection_info);
         }
     }
