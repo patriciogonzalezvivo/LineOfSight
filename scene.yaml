@@ -16,11 +16,11 @@ layers:
     orbit:
         data: { source: orbits }
         properties: 
-            active_types: "visible"
+            active_types: ""
             hovered: -1
         filter: |
                 function () {
-                    var types = properties.active_types.split(" ");
+                    var types = properties.active_types.split(",");
                     for (var type of types) {
                         if (type !== "" && feature['type'].indexOf(type) > -1) {
                             return true;
@@ -395,7 +395,7 @@ styles:
                         satellite = vec3(1.,1.,.0);
                         bbox = vec3(1.);
                     }
-                    color = vec4(line,pulse(v_texcoord.x,.5,.05)*.6);
+                    color = vec4(line,pulse(v_texcoord.x,.5,.1)*.7);
 
                     // Bounding Box
                     float spot = 0.;

@@ -6,12 +6,13 @@ var defaultTime = 3600; // seconds -> 1 hr
 var samplesTotal = 300; // n of samples
 var samplesStep = 20; // seconds
 var timeOffset = 120; // seconds
+var startTime;
 
 // Const
 var EARTH_RADIUS = 6378137.0;
 
 // SOURCES holders
-var library, satellites, types;
+var library, satellites, types, active_types;
 
 // Dynamimc Content
 var selection_info, last_selected;
@@ -35,11 +36,11 @@ map = (function () {
 
     var query = parseQuery(window.location.search.slice(1));
     library = query['load'] ? query['load'] : 'curated';
+    active_types = query['type'] ? query['type'] : 'visible';
     samplesStep = query['step'] ? query['step'] : samplesStep;
     timeOffset = query['offset'] ? query['offset'] : timeOffset;
     samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
     
-
     // Leaflet Map
     var map = L.map('map',{
         minZoom: 3,
@@ -102,6 +103,7 @@ function init() {
             // Parse the geoJSON
             types = JSON.parse(res);
             initHUD();
+            updateType();
         });
         initFeatureSelection();
     });
@@ -115,7 +117,7 @@ function initOrbit() {
     startTime = new Date();
     addOrbitsToTangramSource('orbits', satellites, samplesStep, samplesTotal, timeOffset);
     addOrbitsToTangramImage('orbit', 'u_data', satellites, samplesTotal);
-        reloadTangram();
+    reloadTangram();
 }
 
 function initHUD() {
@@ -138,16 +140,15 @@ function initHUD() {
     
     document.getElementById('types').addEventListener('click', function( event ) {
         var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
-        var active_types = '';
+        active_types = '';
         for (var check in checks) {
             if ( check !== 'checkbox-option' && check.indexOf('checkbox-')>-1) {
                 if (checks[check].checked) {
-                    active_types = checks[check].value + " " + active_types;
+                    active_types = checks[check].value + "," + active_types;
                 }   
             }
         }
-        scene.config.layers.orbit.properties.active_types = active_types;
-        reloadTangram();
+        updateType();
     }, false);
 }
 
@@ -192,6 +193,44 @@ function initFeatureSelection () {
 
 //=========================================================== Update 
 
+function updateType() {
+    // Search for active_type
+    scene.config.layers.orbit.properties.active_types = active_types;
+
+    // Update state
+    var activeTypesArrag = active_types.split(',');
+    var typesDOM = document.getElementsByClassName('hide-checkbox');
+    for (var dom in typesDOM) {
+        typesDOM[dom].checked = false;
+    }
+
+    for (var type of activeTypesArrag) {
+        for (var dom in typesDOM){
+            if (typesDOM[dom].value === type) {
+                typesDOM[dom].checked = true;
+                break;
+            }
+        }
+    }
+    reloadTangram();
+    updateSearchPath();
+}
+
+function updateSearchPath() {
+    var path = "";
+    // samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
+    path += "?";
+    if (library === "all") {
+       path += "load=all&";
+    }
+    path += "type="+active_types;
+    // path += "&step="+samplesStep;
+    // path += "&offset="+timeOffset;
+
+    path += window.location.hash;
+    window.history.pushState(null,null,path);
+}
+
 // Resize map to window
 function resizeMap() {
     document.getElementById('map').style.width = window.innerWidth + 'px';
@@ -226,7 +265,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                             label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+trans['description']+"</span> (";
                             for (var elem in trans) {
                                 if (elem !== 'description' && elem !== 'invert' && elem !== 'mode') {
-                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+trans[elem]+"&nbsp;</span>";    
+                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+(trans[elem]/1000).toFixed(2)+"kHz&nbsp;</span>";    
                                 }
                             }
                             label += ")&nbsp;&nbsp;<br>";
@@ -347,10 +386,13 @@ function updateGeocode (lat, lng) {
 }
 
 function reloadTangram() {
-    var now = new Date();
-    var delta = now.getTime() - startTime.getTime();
-    scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, satellites.length, samplesStep, timeOffset + delta/1000];
-    scene.rebuild();
+    if (startTime) {
+        // Update the offset time to when the style is rebuild 
+        var now = new Date();
+        var delta = now.getTime() - startTime.getTime();
+        scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, satellites.length, samplesStep, timeOffset + delta/1000];
+        scene.rebuild();
+    }
 }
 
 // ============================================= Helpers
