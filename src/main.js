@@ -233,9 +233,9 @@ function updateSearchPath() {
 
 // Resize map to window
 function resizeMap() {
-    document.getElementById('map').style.width = window.innerWidth + 'px';
-    document.getElementById('map').style.height = window.innerHeight + 'px';
-    map.invalidateSize(false);
+    // document.getElementById('map').style.width = window.innerWidth + 'px';
+    // document.getElementById('map').style.height = window.innerHeight + 'px';
+    // map.invalidateSize(false);
 }
 
 var stopMovement = debounce(function(selection, pixel) {
