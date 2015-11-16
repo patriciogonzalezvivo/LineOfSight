@@ -294,7 +294,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                 for (var key in moreInfo.angles) {
                     label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                 }
-                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;doopler factor: "+moreInfo.doopler+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;doppler factor: "+moreInfo.doopler+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                 label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
                 label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
                 label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
