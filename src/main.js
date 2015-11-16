@@ -265,7 +265,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                             label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+trans['description']+"</span> (";
                             for (var elem in trans) {
                                 if (elem !== 'description' && elem !== 'invert' && elem !== 'mode') {
-                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+(trans[elem]/1000).toFixed(2)+"kHz&nbsp;</span>";    
+                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+(trans[elem]/1000000).toFixed(3)+"MHz&nbsp;</span>";    
                                 }
                             }
                             label += ")&nbsp;&nbsp;<br>";
