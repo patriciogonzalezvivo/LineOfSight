@@ -7,23 +7,31 @@ sources:
     orbits:
         type: GeoJSON
         url: data/orbits.geojson
-
 scene:
     background: 
         color: '#020303'
-
 layers:
     orbit:
         data: { source: orbits }
         properties: 
             active_types: ""
+            active_names: ""
             hovered: -1
         filter: |
                 function () {
-                    var types = properties.active_types.split(",");
-                    for (var type of types) {
-                        if (type !== "" && feature['type'].indexOf(type) > -1) {
-                            return true;
+                    if (properties.active_names !== "") {
+                        var names = properties.active_names.split(",");
+                        for (var name of names) {
+                            if (name !== "" && feature['name'].indexOf(name) > -1) {
+                                return true;
+                            }
+                        }
+                    } else {
+                        var types = properties.active_types.split(",");
+                        for (var type of types) {
+                            if (type !== "" && feature['type'].indexOf(type) > -1) {
+                                return true;
+                            }
                         }
                     }
                     return false;
@@ -49,6 +57,7 @@ layers:
         data: { source: osm }
         draw:
             hud:
+                # interactive: true
                 order: 2
                 color: '#020303'
     landuse:

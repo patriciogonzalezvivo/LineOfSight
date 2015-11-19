@@ -12,7 +12,7 @@ var startTime;
 var EARTH_RADIUS = 6378137.0;
 
 // SOURCES holders
-var library, satellites, types, active_types;
+var library, satellites, types, active_types, active_names;
 
 // Dynamimc Content
 var selection_info, last_selected;
@@ -36,7 +36,14 @@ map = (function () {
 
     var query = parseQuery(window.location.search.slice(1));
     library = query['load'] ? query['load'] : 'curated';
-    active_types = query['type'] ? query['type'] : 'visible';
+    if (query['name']) {
+        active_names = query['name'] || '';
+        active_types = '';
+    } else {
+        active_types = query['type'] ? query['type'] : 'visible';
+        active_names = '';
+    }
+    
     samplesStep = query['step'] ? query['step'] : samplesStep;
     timeOffset = query['offset'] ? query['offset'] : timeOffset;
     samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
@@ -103,7 +110,13 @@ function init() {
             // Parse the geoJSON
             types = JSON.parse(res);
             initHUD();
-            updateType();
+
+            if (active_names !== "") {
+                updateNameQuerry();
+            } else {
+                updateType();
+            }
+            
         });
         initFeatureSelection();
     });
@@ -139,6 +152,9 @@ function initHUD() {
     }
     
     document.getElementById('types').addEventListener('click', function( event ) {
+        active_names = '';
+        updateNameQuerry();
+
         var checks = document.getElementById('types').getElementsByClassName('hide-checkbox');
         active_types = '';
         for (var check in checks) {
@@ -179,7 +195,7 @@ function initFeatureSelection () {
                 selection_info.parentNode.removeChild(selection_info);
             }
         } else {
-            scene.getFeatureAt(pixel).then(function (selection){
+            scene.getFeatureAt(pixel).then(function (selection) {
                 updateSelectedFeature(selection, pixel, true);
             });
         }
@@ -216,6 +232,14 @@ function updateType() {
     updateSearchPath();
 }
 
+function updateNameQuerry() {
+    // Search for active_type
+    scene.config.layers.orbit.properties.active_names = active_names;
+
+    reloadTangram();
+    updateSearchPath();
+}
+
 function updateSearchPath() {
     var path = "";
     // samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
@@ -223,7 +247,12 @@ function updateSearchPath() {
     if (library === "all") {
        path += "load=all&";
     }
-    path += "type="+active_types;
+
+    if (active_names !== ''){
+        path += "name="+active_names;
+    } else {
+        path += "type="+active_types;
+    }
     // path += "&step="+samplesStep;
     // path += "&offset="+timeOffset;
 
@@ -247,7 +276,8 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
     if (!selection) { return; }
 
     var feature = selection.feature;
-    if (feature != null) {
+
+    if (feature != null ) {
         var label = '';
         if (feature.properties != null) {
             var obj = JSON.parse(JSON.stringify(feature.properties));
@@ -376,7 +406,16 @@ function updateGeocode (lat, lng) {
         var response = JSON.parse(res);
         if (!response.features || response.features.length === 0) {
             // Sometimes reverse geocoding returns no results
+
             place = 'Observer at Unknown location';
+            // var pixel = { x: window.screen.width/2, y: window.screen.height/2 };
+            // scene.getFeatureAt(pixel).then(function(selection){
+            //     if (selection.feature && selection.feature.properties && selection.feature.properties.kind) {
+            //         place = 'Observer over ' + selection.feature.properties.kind;
+            //     } else {
+            //         place = 'Observer at Unknown location';
+            //     }
+            // });
         }
         else {
             place = 'Observer at '  + response.features[0].properties.label;

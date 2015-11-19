@@ -165,7 +165,7 @@
         "label": "tle-new"
     }, 
     {
-        "visible": true, 
+        "visible": false, 
         "name": "visible", 
         "label": "visible"
     }, 

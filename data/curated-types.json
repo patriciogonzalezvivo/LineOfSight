@@ -20,7 +20,7 @@
         "label": "stations"
     }, 
     {
-        "visible": true, 
+        "visible": false, 
         "name": "visible", 
         "label": "visible"
     }, 
