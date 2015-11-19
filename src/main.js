@@ -324,23 +324,22 @@ function updatePosition() {
     mapCenter.lat = pos.lat;
     mapCenter.lng = pos.lng;
 
+    document.getElementById('left-lat').innerHTML = 'LAT ' + mapCenter.lat.toFixed(4);
+    document.getElementById('left-lng').innerHTML = 'LNG ' + mapCenter.lng.toFixed(4);
+    if (scene.camera && scene.camera.position_meters) {
+        document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
+    }
+
     // This is my API Key for this project. 
     // They are free! get one at https://mapzen.com/developers/sign_in
-    var ELEVATION_KEY = 'elevation-vaNyriU';
+    var ELEVATION_KEY = 'elevation-m_o3bOc';
     getHttp('http://elevation.mapzen.com/height?json={"shape":[{"lat":'+mapCenter.lat+',"lon":'+mapCenter.lng+'}]}&api_key='+ELEVATION_KEY, function (err,res) {
         if (err) console.error(err);
 
         var elevation = JSON.parse(res);
-        if (elevation !== undefined &&
-            elevation.height !== undefined &&
-            elevation.height.length >= 0) {
+        if (elevation.height !== undefined) {
             mapCenter.elevation = elevation.height[0];
-            document.getElementById('left-lat').innerHTML = 'LAT ' + mapCenter.lat.toFixed(4);
-            document.getElementById('left-lng').innerHTML = 'LNG ' + mapCenter.lng.toFixed(4);
             document.getElementById('left-elv').innerHTML = 'ELV ' + mapCenter.elevation.toFixed(1)+'m';
-            if (scene.camera && scene.camera.position_meters) {
-                document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
-            }
         }
     });
 }
@@ -365,7 +364,7 @@ function updateGeocode (lat, lng) {
 
     // This is my API Key for this project. 
     // They are free! get one at https://mapzen.com/developers/sign_in
-    var PELIAS_KEY = 'search-SrJ-888';
+    var PELIAS_KEY = 'search-ReWCLH4';
     var endpoint = '//search.mapzen.com/v1/reverse?point.lat=' + lat + '&point.lon=' + lng + '&size=1&layers=coarse&api_key=' + PELIAS_KEY;
 
     getHttp(endpoint, function(err, res){
