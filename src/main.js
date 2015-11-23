@@ -21,7 +21,7 @@ var place = "Select a place on the world and hover over the visible satellites";
 var placeCounter = 0;
 var picking = false;
 
-// ============================================= INIT 
+// ============================================= INIT
 // Prepair leafleat and tangram
 map = (function () {
     'use strict';
@@ -43,18 +43,19 @@ map = (function () {
         active_types = query['type'] ? query['type'] : 'visible';
         active_names = '';
     }
-    
+
     samplesStep = query['step'] ? query['step'] : samplesStep;
     timeOffset = query['offset'] ? query['offset'] : timeOffset;
     samplesTotal = query['sec'] ? query['sec']/samplesStep+timeOffset : defaultTime/samplesStep+timeOffset;
-    
+
     // Leaflet Map
     var map = L.map('map',{
         minZoom: 3,
         maxZoom: 11,
         trackResize: true,
         keyboard: false,
-        scrollWheelZoom: 'center'
+        scrollWheelZoom: (window.self === window.top) ? 'center' : false,
+        dragging: (window.self === window.top && L.Browser.mobile) ? false : true
     });
 
     // Tangram Layer
@@ -85,7 +86,7 @@ map = (function () {
 function init() {
 
     // On resize
-    window.addEventListener('resize', resizeMap);    
+    window.addEventListener('resize', resizeMap);
 
     // On drag
     map.on('moveend', function () {
@@ -116,14 +117,14 @@ function init() {
             } else {
                 updateType();
             }
-            
+
         });
         initFeatureSelection();
     });
     layer.addTo(map);
     resizeMap();
     updatePosition();
-    updateLocation("");    
+    updateLocation("");
 }
 
 function initOrbit() {
@@ -150,7 +151,7 @@ function initHUD() {
         typesDOM.innerHTML += '<hr/>';
         typesDOM.innerHTML += '<hr/><a style="color: white; text-decoration: none;" href="http://patriciogonzalezvivo.github.io/LineOfSight/?load=all"><span style="color: white; text-decoration: none;">load more...</span></a>';
     }
-    
+
     document.getElementById('types').addEventListener('click', function( event ) {
         active_names = '';
         updateNameQuerry();
@@ -161,7 +162,7 @@ function initHUD() {
             if ( check !== 'checkbox-option' && check.indexOf('checkbox-')>-1) {
                 if (checks[check].checked) {
                     active_types = checks[check].value + "," + active_types;
-                }   
+                }
             }
         }
         updateType();
@@ -207,7 +208,7 @@ function initFeatureSelection () {
     });
 }
 
-//=========================================================== Update 
+//=========================================================== Update
 
 function updateType() {
     // Search for active_type
@@ -272,7 +273,7 @@ var stopMovement = debounce(function(selection, pixel) {
 }, 500);
 
 function updateSelectedFeature(selection, pixel, moreInfo) {
-    // Return if there is no selection   
+    // Return if there is no selection
     if (!selection) { return; }
 
     var feature = selection.feature;
@@ -286,7 +287,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                 // Ignore the kind, id, name and norad_id
                 if (key === 'kind' || key === 'id' || key === 'name' || key === 'norad_id') {
                     continue;
-                } 
+                }
                 else if (key === 'transmitters') {
                     if (feature.properties[key].length > 0) {
                         label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" :</span><br>";
@@ -295,27 +296,27 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                             label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+trans['description']+"</span> (";
                             for (var elem in trans) {
                                 if (elem !== 'description' && elem !== 'invert' && elem !== 'mode') {
-                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+(trans[elem]/1000000).toFixed(3)+"MHz&nbsp;</span>";    
+                                    label += "<span class='labelLine'>&nbsp;"+elem+" : "+(trans[elem]/1000000).toFixed(3)+"MHz&nbsp;</span>";
                                 }
                             }
                             label += ")&nbsp;&nbsp;<br>";
                         }
                     }
-                } 
+                }
                 else if (key === 'height') {
                     label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key].toFixed(2)+"km&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                } 
+                }
                 else {
-                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";    
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+feature.properties[key]+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
                 }
             }
-            
+
             if (last_selected !== feature.properties.id) {
                 scene.config.layers.orbit.properties.hovered = feature.properties.id;
                 reloadTangram();
                 last_selected = feature.properties.id;
             }
-            
+
             if (moreInfo){
                 label += "<div class='hr'><hr />";
                 updatePosition();
@@ -360,10 +361,10 @@ function updatePosition() {
         document.getElementById('left-alt').innerHTML = 'ALT ' + (scene.camera.position_meters[2]*0.001).toFixed(1)+'km';
     }
 
-    // This is my API Key for this project. 
+    // This is my API Key for this project.
     // They are free! get one at https://mapzen.com/developers/sign_in
     var ELEVATION_KEY = 'elevation-m_o3bOc';
-    getHttp('http://elevation.mapzen.com/height?json={"shape":[{"lat":'+mapCenter.lat+',"lon":'+mapCenter.lng+'}]}&api_key='+ELEVATION_KEY, function (err,res) {
+    getHttp('https://elevation.mapzen.com/height?json={"shape":[{"lat":'+mapCenter.lat+',"lon":'+mapCenter.lng+'}]}&api_key='+ELEVATION_KEY, function (err,res) {
         if (err) console.error(err);
 
         var elevation = JSON.parse(res);
@@ -384,7 +385,7 @@ function updateLocation(text) {
         }, 3000);
     } else {
         setTimeout( function(){
-            document.getElementById('loc').innerHTML = text + '<span>|</span>'; 
+            document.getElementById('loc').innerHTML = text + '<span>|</span>';
             updateLocation(text+place.charAt(placeCounter++));
         }, 100);
     }
@@ -392,7 +393,7 @@ function updateLocation(text) {
 
 function updateGeocode (lat, lng) {
 
-    // This is my API Key for this project. 
+    // This is my API Key for this project.
     // They are free! get one at https://mapzen.com/developers/sign_in
     var PELIAS_KEY = 'search-ReWCLH4';
     var endpoint = '//search.mapzen.com/v1/reverse?point.lat=' + lat + '&point.lon=' + lng + '&size=1&layers=coarse&api_key=' + PELIAS_KEY;
@@ -425,7 +426,7 @@ function updateGeocode (lat, lng) {
 
 function reloadTangram() {
     if (startTime) {
-        // Update the offset time to when the style is rebuild 
+        // Update the offset time to when the style is rebuild
         var now = new Date();
         var delta = now.getTime() - startTime.getTime();
         scene.styles.orbit.shaders.uniforms.u_param = [samplesTotal, satellites.length, samplesStep, timeOffset + delta/1000];
@@ -458,4 +459,3 @@ function debounce(func, wait, immediate) {
         if (callNow) func.apply(context, args);
     };
 };
-
