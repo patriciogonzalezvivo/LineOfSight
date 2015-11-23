@@ -38,7 +38,7 @@ Data sources:
 * [Mapzen’s tile vectors](https://mapzen.com/projects/vector-tiles)
 * [Mapzen’s elevation data](https://mapzen.com/documentation/elevation/elevation-service/)
 * [Mapzen’s geo search](https://mapzen.com/projects/search)
-* [SatNOGS trasmitters for satellite](https://satnogs.org/)
+* [SatNOGS transmitters for satellite](https://satnogs.org/)
 
 ## Install a local version of this project
 
