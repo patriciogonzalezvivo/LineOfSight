@@ -55,7 +55,8 @@ map = (function () {
         trackResize: true,
         keyboard: false,
         scrollWheelZoom: (window.self === window.top) ? 'center' : false,
-        dragging: (window.self === window.top && L.Browser.mobile) ? false : true
+        dragging: (window.self !== window.top && L.Browser.touch) ? false : true,
+        tap: (window.self !== window.top && L.Browser.touch) ? false : true,
     });
 
     // Tangram Layer
