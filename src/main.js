@@ -322,18 +322,29 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
                 label += "<div class='hr'><hr />";
                 updatePosition();
                 var moreInfo = getObserveCoords(satellites[feature.properties.id], mapCenter.lng, mapCenter.lat);
-                label += "<span class='labelLine'>&nbsp;&nbsp;Look angles:</span><br>";
-                for (var key in moreInfo.angles) {
-                    label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                }
-                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;doppler factor: "+moreInfo.doopler+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
-                label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
-                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
-                label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                
+                if ( moreInfo.angles['elevation'] > 0) {
+                    label += "<span class='labelLine'>&nbsp;&nbsp;Look angles:</span><br>";
+                    for (var key in moreInfo.angles) {
+                        if (key === 'azimuth' || key === 'elevation') {
+                            label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+(moreInfo.angles[key]*(180/Math.PI)).toFixed(4)+" deg&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                        } else {
+                             label += "<span class='labelLine' key="+key+" value="+moreInfo.angles[key]+">&nbsp;&nbsp;&nbsp;&nbsp;"+key+" : "+moreInfo.angles[key].toFixed(4)+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                        }
+                       
+                    }
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;doppler factor: "+moreInfo.doopler+"&nbsp;&nbsp;&nbsp;&nbsp;</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;at:</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lat: "+mapCenter.lat.toFixed(4)+"&nbsp;&nbsp;</span><br>";
+                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;lng: "+mapCenter.lng.toFixed(4)+"&nbsp;&nbsp;</span><br>";
 
-                if (mapCenter.elevation) {
-                    label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;elevation: "+mapCenter.elevation.toFixed(1)+"m&nbsp;&nbsp;</span><br>";
+                    if (mapCenter.elevation) {
+                        label += "<span class='labelLine'>&nbsp;&nbsp;&nbsp;&nbsp;elevation: "+mapCenter.elevation.toFixed(1)+"m&nbsp;&nbsp;</span><br>";
+                    }
+                } else {
+                    label += "<span class='labelLine'>&nbsp;&nbsp;Not in line of sight&nbsp;&nbsp;</span><br>";
                 }
+                
             }
         }
 
