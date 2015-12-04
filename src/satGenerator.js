@@ -232,8 +232,8 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
         }
     }
     ctx.putImageData(imageData, 0, 0);
-    scene.styles[styleName].shaders.uniforms[imageName] = canvas.toDataURL('image/png');
-    scene.rebuild();
+    scene.setTexture(styleName, imageName, canvas.toDataURL('image/png'));
+    // scene.setTexture(styleName, imageName, canvas);
 }
 
 // ============================================= Helpers
