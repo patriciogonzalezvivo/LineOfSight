@@ -73,7 +73,86 @@ There are more than 1700 satellites out there ([see the complete list here](http
 
 Once the future position of the orbits are calculated I make a geoJson lines and load them to Tangram. This will be the support geometry for the satellites orbits as well as the current position display. How Tangram animate the moving satellites targets? Well that’s a little more mystical. Instead of updating Tangram at 30fps (which will be very expensive to do) I save all the future positions into a texture. Each satellite have a row in that texture to look at. Using the time of the computer each satellite looks to the right position on his own line to know which is their current and next position making a nice interpolation between them.
 
-![encoded positions on texture](imgs/texture.png)  
+![encoded positions on texture](imgs/texture.png)
+
+This is how the image is made:
+
+```javascript
+function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
+    var width = samplesTotal;
+    var height = satData.length;
+
+    var canvas = document.createElement(“canvas”);
+    canvas.width = width*2;
+    canvas.height = height;
+    var cox = canvas.getContext(‘2d’);
+    var imageData = ctx.getImageData(0, 0, width*2, height);
+    var data = imageData.data;
+    var index, lat, lat3, lon, lon3, x, y;
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width*2; x++) {
+            index = (y*(width*2)+x)*4;
+            if (x < width) {
+                // LON
+                lon = ((180+satData[y].track[x].ln)/360);
+                lon3 = encode(lon*16581375);
+                data[index] = lon3[0];
+                data[index+1] = lon3[1];
+                data[index+2] = lon3[2];
+                data[index+3] = 255;
+            } else {
+                // LAT
+                lat = (.5+(lat2y(satData[y].track[x-width].lt)/180)*.5);
+                lat3 = encode(lat*16581375);
+                data[index] = lat3[0];
+                data[index+1] = lat3[1];
+                data[index+2] = lat3[2];
+                data[index+3] = 255;
+            }
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    scene.styles[styleName].shaders.uniforms[imageName] = canvas.toDataURL(‘image/png’);
+    scene.rebuild();
+}
+```
+
+This is how the positions is unencoded on the Fragment Shader:
+
+```glsl
+float getIndex (vec2 encodedIndex) {
+    return (encodedIndex.x*65025.+encodedIndex.y*255.)+.5;
+}
+
+float decode (vec3 value) {
+    return ((value.x*255.)+(value.y*65025.)+(value.z*16581375.))/16581375.;
+}
+
+vec2 getCoords (vec2 st) {
+    float texWidth = (u_param.x*2.);
+    float texHeigth = u_param.y;
+    st.y = 1.-st.y/texHeigth;
+    vec3 lon = texture2D(u_data,vec2(st.x/texWidth,st.y)).xyz;
+    vec3 lat = texture2D(u_data,vec2(st.x/texWidth+.5,st.y)).xyz;
+    return vec2(decode(lon), decode(lat));
+}
+
+// Return normalized values for lat, lon and height, and angle in radiants
+vec2 getPosFor (float index, float time) {
+    float col = (time+u_param.w)/u_param.z;
+    return vec2(getCoords(vec2(col,index)));
+}
+
+…
+
+float index = getIndex(color.st);
+vec2 pos = getPosFor(index,u_time);
+pos = (((pos*2.)-1.)*PI)*EARTH_RADIUS;
+vec2 worldPos = u_map_position.xy+v_position.xy;
+vec2 st = (worldPos-pos)*.0000002;
+st *= 1.5+pow(map(u_map_position.z,0.,15.,0.,1.),5.0)*500.;
+```
+
 
 The poetic twist of this is that because of the limited precision on images I have to encode each number in colors, a poetically close concept of [stellar spectra](http://hubblesite.org/laserart/spectra.php) what astronomers infer the composition of a star 
 
