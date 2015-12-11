@@ -7,6 +7,9 @@ sources:
     orbits:
         type: GeoJSON
         url: data/orbits.geojson
+textures:
+    orbit:
+        element: 
 scene:
     background: 
         color: '#020303'
@@ -357,7 +360,7 @@ styles:
                 TWO_PI: 6.283185307
                 EARTH_RADIUS: 6378137.0
             uniforms:
-                u_data: data/orbits.png
+                u_data: orbit
                 u_param: [0,0,0,0]
             blocks:
                 global: |
