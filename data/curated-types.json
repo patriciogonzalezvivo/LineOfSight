@@ -6,13 +6,23 @@
     }, 
     {
         "visible": false, 
-        "name": "navigation", 
-        "label": "navigation"
+        "name": "geostationary", 
+        "label": "geostationary"
     }, 
     {
         "visible": false, 
-        "name": "special", 
-        "label": "special"
+        "name": "gps-ops", 
+        "label": "gps-ops"
+    }, 
+    {
+        "visible": false, 
+        "name": "resource", 
+        "label": "resource"
+    }, 
+    {
+        "visible": false, 
+        "name": "science", 
+        "label": "science"
     }, 
     {
         "visible": false, 

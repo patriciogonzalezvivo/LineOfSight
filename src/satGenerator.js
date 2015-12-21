@@ -64,7 +64,8 @@ function getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset) {
             sat.satrec = satellite.twoline2satrec(sat.tleLine1, sat.tleLine2);
         }
         catch(err) {
-            console.log(sat, err)
+            console.log("getOrbitTrack: satrec ", err, sat)
+            return []
         }
     }
 
@@ -80,12 +81,15 @@ function getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset) {
     }
     // t.setMinutes(t.getSeconds() - 180);
     for (var i = 0; i < samplesTotal; i++) {
+        var pos = [];
         try {
-            track.push(getSatellitePositionAt(sat.satrec,t));
+            pos = getSatellitePositionAt(sat.satrec,t);
         }
         catch(err) {
-            console.log(err,sat,t);
+            console.log("getOrbitTrack: ", err, t, sat);
+            break;
         }
+        track.push(pos);
         t.setSeconds(t.getSeconds() + samplesStep); 
     }
     return track;
@@ -98,10 +102,10 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
         sat.track = getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset);
     } 
 
-    if (sat.track.length > 2) {
-        // Generate a random id number
-        idCounter++;
+    // Generate unique id number
+    idCounter++;
 
+    if (sat.track.length > 2) {
         // Add coordinates of the orbit to a feature on the JSON        
         var i = 0;
         var prevLon = sat.track[0].ln;
@@ -123,6 +127,7 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
             features.push(featureA);
         }
     }
+    
     return features;
 }
 
@@ -220,8 +225,9 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
     var data = imageData.data;
     var index, lat, lat3, lon, lon3, x, y;
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width*2; x++) {
-            index = (y*(width*2)+x)*4;
+        var samples = satData[y].track.length
+        for (x = 0; x < samples*2; x++) {
+            index = (y*(samples*2)+x)*4;
             if (x < width) {
                 // LON
                 lon = ((180+satData[y].track[x].ln)/360);

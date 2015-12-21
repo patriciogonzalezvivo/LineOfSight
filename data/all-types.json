@@ -6,13 +6,18 @@
     }, 
     {
         "visible": false, 
-        "name": "classfd", 
-        "label": "classfd"
+        "name": "argos", 
+        "label": "argos"
     }, 
     {
         "visible": false, 
-        "name": "cubesat", 
-        "label": "cubesat"
+        "name": "beidou", 
+        "label": "beidou"
+    }, 
+    {
+        "visible": false, 
+        "name": "classfd", 
+        "label": "classfd"
     }, 
     {
         "visible": false, 
@@ -36,13 +41,13 @@
     }, 
     {
         "visible": false, 
-        "name": "geo", 
-        "label": "geo"
+        "name": "geodetic", 
+        "label": "geodetic"
     }, 
     {
         "visible": false, 
-        "name": "geodetic", 
-        "label": "geodetic"
+        "name": "geostationary", 
+        "label": "geostationary"
     }, 
     {
         "visible": false, 
@@ -53,16 +58,6 @@
         "visible": false, 
         "name": "globalstar", 
         "label": "globalstar"
-    }, 
-    {
-        "visible": false, 
-        "name": "goes", 
-        "label": "goes"
-    }, 
-    {
-        "visible": false, 
-        "name": "gorizont", 
-        "label": "gorizont"
     }, 
     {
         "visible": false, 
@@ -111,11 +106,6 @@
     }, 
     {
         "visible": false, 
-        "name": "other-comm", 
-        "label": "other-comm"
-    }, 
-    {
-        "visible": false, 
         "name": "other", 
         "label": "other"
     }, 
@@ -126,11 +116,6 @@
     }, 
     {
         "visible": false, 
-        "name": "raduga", 
-        "label": "raduga"
-    }, 
-    {
-        "visible": false, 
         "name": "resource", 
         "label": "resource"
     }, 
@@ -138,11 +123,6 @@
         "visible": false, 
         "name": "sarsat", 
         "label": "sarsat"
-    }, 
-    {
-        "visible": false, 
-        "name": "sbas", 
-        "label": "sbas"
     }, 
     {
         "visible": false, 
