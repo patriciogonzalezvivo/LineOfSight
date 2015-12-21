@@ -46,10 +46,7 @@ def getDataFromLTEsFolder( folder ):
         type = os.path.splitext(filename)[0]
 
         typeObj = {}
-        if type == 'visible':
-            typeObj['visible'] = True
-        else:
-            typeObj['visible'] = False
+        typeObj['visible'] = False
 
         typeObj['name'] = type
         typeObj['label'] = type
@@ -111,10 +108,7 @@ def getDataFromIDFolder(main_data, folder ):
         type = os.path.splitext(filename)[0]
 
         typeObj = {}
-        if type == 'visible':
-            typeObj['visible'] = True
-        else:
-            typeObj['visible'] = False
+        typeObj['visible'] = False
 
         typeObj['name'] = type
         typeObj['label'] = type
