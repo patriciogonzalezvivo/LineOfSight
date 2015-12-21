@@ -60,8 +60,12 @@ function getSatellitePositionAt(satrec, date) {
 
 function getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset) {
     if (sat.satrec === undefined) {
-        // console.log("Computing orbit for",sat.name,"(",sat.type,"): ");
-        sat.satrec = satellite.twoline2satrec(sat.tleLine1, sat.tleLine2);
+        try {
+            sat.satrec = satellite.twoline2satrec(sat.tleLine1, sat.tleLine2);
+        }
+        catch(err) {
+            console.log(sat, err)
+        }
     }
 
     samplesStep = samplesStep ? samplesStep : 60;       // seconds
@@ -76,7 +80,12 @@ function getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset) {
     }
     // t.setMinutes(t.getSeconds() - 180);
     for (var i = 0; i < samplesTotal; i++) {
-        track.push(getSatellitePositionAt(sat.satrec,t));
+        try {
+            track.push(getSatellitePositionAt(sat.satrec,t));
+        }
+        catch(err) {
+            console.log(err,sat,t);
+        }
         t.setSeconds(t.getSeconds() + samplesStep); 
     }
     return track;
@@ -89,29 +98,30 @@ function getOrbitFeatures(sat, features, samplesStep, samplesTotal, timeOffset) 
         sat.track = getOrbitTrack(sat, samplesStep, samplesTotal, timeOffset);
     } 
 
-    // Generate a random id number
-    idCounter++;
+    if (sat.track.length > 2) {
+        // Generate a random id number
+        idCounter++;
 
-    // Add coordinates of the orbit to a feature on the JSON
-    
-    var i = 0;
-    var prevLon = sat.track[0].ln;
-    while (i < sat.track.length) {
-        var featureA = makeFeature(sat);
-        featureA.properties.height = sat.track[0].h; 
+        // Add coordinates of the orbit to a feature on the JSON        
+        var i = 0;
+        var prevLon = sat.track[0].ln;
         while (i < sat.track.length) {
-            if ( Math.abs(sat.track[i].ln - prevLon) > 180.0 ){
-                // If pass the day change make another feature
-                var next = sat.track[i].ln - prevLon > 0 ? -360 : 360;
-                featureA.geometry.coordinates.push([sat.track[i].ln+next, sat.track[i].lt]);
+            var featureA = makeFeature(sat);
+            featureA.properties.height = sat.track[0].h; 
+            while (i < sat.track.length) {
+                if ( Math.abs(sat.track[i].ln - prevLon) > 180.0 ){
+                    // If pass the day change make another feature
+                    var next = sat.track[i].ln - prevLon > 0 ? -360 : 360;
+                    featureA.geometry.coordinates.push([sat.track[i].ln+next, sat.track[i].lt]);
+                    prevLon = sat.track[i].ln;
+                    break;
+                }
+                featureA.geometry.coordinates.push([sat.track[i].ln, sat.track[i].lt]);
                 prevLon = sat.track[i].ln;
-                break;
+                i++;
             }
-            featureA.geometry.coordinates.push([sat.track[i].ln, sat.track[i].lt]);
-            prevLon = sat.track[i].ln;
-            i++;
+            features.push(featureA);
         }
-        features.push(featureA);
     }
     return features;
 }
