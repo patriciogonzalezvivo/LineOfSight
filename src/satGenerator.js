@@ -194,7 +194,7 @@ function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal
     }
 
     // Get the geoJSON to add the orbit to
-    getHttp(scene.config.sources[sourceName].url, function (err, res) {
+    getHttp("data/orbits.geojson", function (err, res) {
         if (err) {
             console.error(err);
         }
@@ -210,6 +210,9 @@ function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal
         var content = JSON.stringify(geoJSON);
         scene.config.sources[sourceName].url = createObjectURL(new Blob([content]));
         scene.rebuild();
+
+        // scene.setDataSource("orbit", {type: 'GeoJSON', data: geoJSON });
+        // scene.updateConfig({ rebuild: true });
     });
 }
 
@@ -248,8 +251,9 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
         }
     }
     ctx.putImageData(imageData, 0, 0);
-    scene.styles[styleName].shaders.uniforms[imageName] = canvas.toDataURL('image/png');
-    scene.rebuild();
+
+    scene.config.textures.orbit.element = canvas;
+    scene.updateConfig({ rebuild: true });
 }
 
 // ============================================= Helpers
