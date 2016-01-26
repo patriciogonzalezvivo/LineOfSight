@@ -194,26 +194,10 @@ function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal
     }
 
     // Get the geoJSON to add the orbit to
-    getHttp("data/orbits.geojson", function (err, res) {
-        if (err) {
-            console.error(err);
-        }
-   		// Parse the geoJSON
-        var geoJSON = JSON.parse(res);
-
-	    // Precompute features
-        for (var feature of features) {
-             geoJSON.features.push(feature);
-        }
-
-        // Make it a blob and return the url
-        var content = JSON.stringify(geoJSON);
-        scene.config.sources[sourceName].url = createObjectURL(new Blob([content]));
-        scene.rebuild();
-
-        // scene.setDataSource("orbit", {type: 'GeoJSON', data: geoJSON });
-        // scene.updateConfig({ rebuild: true });
-    });
+    scene.setDataSource("orbits", {type: 'GeoJSON', data: {
+        "type": "FeatureCollection",
+        "features": features
+    }});
 }
 
 function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {

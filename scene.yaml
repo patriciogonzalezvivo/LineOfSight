@@ -4,13 +4,9 @@ sources:
     osm:
         type: TopoJSON
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-Nhm6Mkg
-    orbits:
-        type: GeoJSON
-        url: data/orbits.geojson
 textures:
     orbit:
         element: 
-
 scene:
     background: 
         color: '#020303'
