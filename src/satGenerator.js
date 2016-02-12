@@ -202,15 +202,13 @@ function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal
 }
 
 function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
-    glslData = new GlslData();
-    glslData.setTotalInstances(samplesTotal*2);
+    data = new Data2Image();
+    data.setTotalInstances(samplesTotal*2);
     window.satData = satData;
 
     for (var i = 0; i < satData.length; i++) {
-        glslData.addElement(satData[i].name, 'ufloat', (instance, element) => {
-            // console.log(sat);
+        data.addElement(satData[i].name, 'ufloat', (instance, element) => {
             var sat = satellites[element.id];
-            // debugger;
             if (instance < samplesTotal) {
                 return ((180+sat.track[instance].ln)/360);
             } else {
@@ -219,54 +217,11 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
         });
     }
 
-    scene.config.textures.orbit.element = glslData.generate();
+    scene.config.textures.orbit.element = data.generate();
     scene.updateConfig({ rebuild: true });
-
-    // var canvas = document.createElement("canvas");
-    // canvas.width = width*2;
-    // canvas.height = height;
-    // var ctx = canvas.getContext('2d');
-    // var imageData = ctx.getImageData(0, 0, width*2, height);
-    // var data = imageData.data;
-    // var index, lat, lat3, lon, lon3, x, y;
-    // for (y = 0; y < height; y++) {
-    //     var samples = satData[y].track.length
-    //     for (x = 0; x < samples*2; x++) {
-    //         index = (y*(samples*2)+x)*4;
-    //         if (x < width) {
-    //             // LON
-    //             lon = ((180+satData[y].track[x].ln)/360);
-    //             lon3 = encode(lon*16581375);
-    //             data[index] = lon3[0];
-    //             data[index+1] = lon3[1];
-    //             data[index+2] = lon3[2];
-    //             data[index+3] = 255;
-    //         } else {
-    //             // LAT
-    //             lat = (.5+(lat2y(satData[y].track[x-width].lt)/180)*.5);
-    //             lat3 = encode(lat*16581375);
-    //             data[index] = lat3[0];
-    //             data[index+1] = lat3[1];
-    //             data[index+2] = lat3[2];
-    //             data[index+3] = 255;
-    //         }
-    //     }
-    // }
-    // ctx.putImageData(imageData, 0, 0);
-
-    // scene.config.textures.orbit.element = canvas;
-    // scene.updateConfig({ rebuild: true });
 }
 
 // ============================================= Helpers
-function encode(value) {
-    return [
-        Math.floor(value%255),
-        Math.floor(value/255)%255,
-        Math.floor(value/(255*255))
-    ];
-}
-
 function lat2y(a) { return 180/Math.PI * Math.log(Math.tan(Math.PI/4+a*(Math.PI/180)/2)); }
 
 function getHttp (url, callback) {
