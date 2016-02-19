@@ -217,7 +217,7 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
         });
     }
 
-    scene.config.textures.orbit.element = data.generate();
+    scene.config.textures.orbit.url = data.getUrl();
     scene.updateConfig({ rebuild: true });
 }
 
