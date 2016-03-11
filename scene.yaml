@@ -248,7 +248,7 @@ styles:
                         return  clamp(  rect(st, vec2(size*0.5,width*0.125)) +
                                         rect(st, vec2(width*0.125,size*0.5)),0.,1.);
                     }
-    space-tile:
+    spaceTile:
         shaders:
             defines:
                 TILE_SCALE: 0.0002445
@@ -268,7 +268,7 @@ styles:
                     // Normalize the attribute position of a vertex
                     v_pos = NORMALIZED_SHORT(a_position.xyz);
     grid:
-        mix: space-tile
+        mix: spaceTile
         shaders:
             blocks:
                 global: |

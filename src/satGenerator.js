@@ -209,10 +209,16 @@ function addOrbitsToTangramImage(styleName, imageName, satData, samplesTotal) {
     for (var i = 0; i < satData.length; i++) {
         data.addElement(satData[i].name, 'ufloat', (instance, element) => {
             var sat = satellites[element.id];
-            if (instance < samplesTotal) {
+            // console.log(sat.track.length, instance)
+            if (instance < samplesTotal && sat.track[instance]) {
                 return ((180+sat.track[instance].ln)/360);
-            } else {
+            } 
+            else if (sat.track[instance-samplesTotal]) {
                 return (.5+(lat2y(sat.track[instance-samplesTotal].lt)/180)*.5);
+            }
+            else {
+                console.log('Error computing', element, 'instance', instance);
+                return 0.0;
             }
         });
     }
