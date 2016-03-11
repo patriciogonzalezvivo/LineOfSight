@@ -387,7 +387,7 @@ styles:
                         float col = (time+u_param.w)/u_param.z;
                         return vec2(getCoords(vec2(col,index)));
                     }
-                color: |
+                filter: |
                     // Locate the satellite
                     //===============================
                     float index = getIndex(color.st);
