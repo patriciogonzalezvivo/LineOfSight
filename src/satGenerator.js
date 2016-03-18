@@ -183,6 +183,24 @@ function getObserveCoords(sat, lon, lat) {
 }
 // ==================================================
 
+// var saveData = (function () {
+//     var a = document.createElement("a");
+//     document.body.appendChild(a);
+//     a.style = "display: none";
+//     return function (data, fileName) {
+//         var json = JSON.stringify(data),
+//             blob = new Blob([json], {type: "octet/stream"}),
+//             url = window.URL.createObjectURL(blob);
+//         a.href = url;
+//         a.download = fileName;
+//         a.click();
+//         window.URL.revokeObjectURL(url);
+//     };
+// }());
+
+
+// saveData(data, fileName);
+
 // Add a orbit to a geoJSON file
 function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal, timeOffset) {
     var features = [];
@@ -194,8 +212,13 @@ function addOrbitsToTangramSource(sourceName, satData, samplesStep, samplesTotal
         getOrbitFeatures(satData, features, samplesStep, samplesTotal, timeOffset);
     }
 
+    // saveData(geoJSON, {
+    //     "type": "FeatureCollection",
+    //     "features": features
+    // })
+
     // Get the geoJSON to add the orbit to
-    scene.setDataSource("orbits", {type: 'GeoJSON', data: {
+    scene.setDataSource("orbits", { type: 'GeoJSON', data: {
         "type": "FeatureCollection",
         "features": features
     }});
