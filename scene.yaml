@@ -68,7 +68,7 @@ layers:
                 color: '#427071'
     roads:
         data: { source: osm, layer: roads }
-        filter: { $zoom: {min: 7}, not: { highway: service, kind: rail } }
+        filter: { $zoom: {min: 7}, not: { kind: rail } }
         draw:
             lines:
                 order: 7
