@@ -8,11 +8,15 @@ import:
     - https://tangrams.github.io/blocks/shapes/rect.yaml
     - https://tangrams.github.io/blocks/shapes/cross.yaml
     - https://tangrams.github.io/blocks/filter/grid.yaml
+    - https://tangrams.github.io/blocks/source-elevation.yaml
+    - https://tangrams.github.io/blocks/elevation/stripes.yaml
+    - https://tangrams.github.io/blocks/functions/zoom.yaml
 
 sources:
     osm:
         type: TopoJSON
         url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-Nhm6Mkg
+        rasters: [normals-elevation]
 
 textures:
     orbit:
@@ -67,20 +71,19 @@ layers:
     earth:
         data: { source: osm }
         draw:
-            hud:
+            polygons:
                 order: global.order
                 color: '#192B31'
     water:
         data: { source: osm }
         draw:
             hud:
-                # interactive: true
                 order: global.order
                 color: '#020303'
     landuse:
         data: { source: osm }
         draw:
-            area:
+            landuse:
                 order: global.order
                 color: '#427071'
     roads:
@@ -144,6 +147,21 @@ layers:
                     width: [[14,.1px],[16,.5px], [17, 2m]]
 
 styles:
+    landuse:
+        base: polygons
+        mix: [functions-zoom, elevation-stripes]
+        shaders:
+            defines:
+                ZOOM_START: 0.
+                ZOOM_END: 13.
+                STRIPES_ALPHA: .5
+                STRIPES_SCALE: 70.
+                STRIPES_DIR: vec3(-0.600,-0.420,0.560)
+                STRIPES_PCT: 1.8
+                STRIPES_WIDTH: mix( (1.-zoom()),
+                                    dot((sampleRaster(int(NORMAL_TEXTURE_INDEX)).rgb-.5)*2.,
+                                        STRIPES_DIR),
+                                    zoom())*STRIPES_PCT
     hud:
         base: polygons
         mix: [shapes-cross, filter-grid]
@@ -164,35 +182,13 @@ styles:
                     // GRID
                     vec2 st = getTileCoords();
                     float zoom = 0.0001+fract(u_map_position.z);
-                    float overlayGrid = 0.0;
-                    //overlayGrid += TileGrid()*.5;
-                    //
+
                     // CROSSES
                     vec2 crosses_st = st + .5;
                     vec2 crosses_st_f = fract(crosses_st);
-                    overlayGrid *= 1.-rect(crosses_st_f, .003*(1.+(1.-zoom)));
-                    
-                    //
-                    // APPLY
-                    //===============================
-                    color.rgb = mix(color.rgb,vec3(0.824,0.835,0.843),clamp(overlayGrid,0.,1.));
-                    overlayGrid = cross(crosses_st_f, .0001, .012*(1.+(1.-zoom)) )*.75;
+
+                    float overlayGrid = cross(crosses_st_f, .0001, .012*(1.+(1.-zoom)) )*.75;
                     color.rgb = mix(color.rgb,vec3(0.700,0.761,0.768),clamp(overlayGrid,0.,1.));
-    area:
-        base: polygons
-        mix: [geometry-matrices, functions-map, functions-aastep, hud]
-        blend: inlay
-        shaders: 
-            blocks: 
-                global: |
-                    float stripes(vec2 st, float width){
-                        st = rotate2D(.72)*st;
-                        st *= 92.;
-                        return aastep(.5+width*0.5,abs(sin(st.y*3.14159265358)));
-                    }
-                filter: |
-                    float SatOsmPct = pow(1.-map(u_map_position.z,6.,9.,0.,1.),5.0);
-                    color.a = stripes(st_center*2.,SatOsmPct*1.4)*.5;
     orbit:
         base: lines
         mix: [geometry-matrices, functions-map, shapes-cross]
