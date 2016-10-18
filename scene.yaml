@@ -1,33 +1,50 @@
 ﻿# Author @patriciogv - 2015
 
+import:
+    - https://tangrams.github.io/blocks/global.yaml
+    - https://tangrams.github.io/blocks/functions/aastep.yaml
+    - https://tangrams.github.io/blocks/functions/map.yaml
+    - https://tangrams.github.io/blocks/geometry/matrices.yaml
+    - https://tangrams.github.io/blocks/shapes/rect.yaml
+    - https://tangrams.github.io/blocks/shapes/cross.yaml
+    - https://tangrams.github.io/blocks/filter/grid.yaml
+
 sources:
     osm:
         type: TopoJSON
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-Nhm6Mkg
+        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-Nhm6Mkg
+
 textures:
     orbit:
         element: 
+
+global: 
+    active_types: ""
+    active_names: ""
+    hovered: -1
+
 scene:
     background: 
         color: '#020303'
+
+cameras:
+    perspective:
+        type: perspective
+
 layers:
     orbit:
         data: { source: orbits }
-        properties: 
-            active_types: ""
-            active_names: ""
-            hovered: -1
         filter: |
                 function () {
-                    if (properties.active_names !== "") {
-                        var names = properties.active_names.split(",");
+                    if (global.active_names !== "") {
+                        var names = global.active_names.split(",");
                         for (var name of names) {
                             if (name !== "" && feature['name'].indexOf(name) > -1) {
                                 return true;
                             }
                         }
                     } else {
-                        var types = properties.active_types.split(",");
+                        var types = global.active_types.split(",");
                         for (var type of types) {
                             if (type !== "" && feature['type'].indexOf(type) > -1) {
                                 return true;
@@ -42,7 +59,7 @@ layers:
                 order: 10
                 color: |
                     function(){
-                        var hovered = feature.id === properties.hovered ? 0 : 1;
+                        var hovered = feature.id === global.hovered ? 0 : 1;
                         return [ ( Math.floor(feature.id/255))/255, (feature.id%255)/255, hovered ]; 
                     }
                 width: [ [1,3px], [20,180px]]
@@ -51,23 +68,23 @@ layers:
         data: { source: osm }
         draw:
             hud:
-                order: 1
+                order: global.order
                 color: '#192B31'
     water:
         data: { source: osm }
         draw:
             hud:
                 # interactive: true
-                order: 2
+                order: global.order
                 color: '#020303'
     landuse:
         data: { source: osm }
         draw:
             area:
-                order: 3
+                order: global.order
                 color: '#427071'
     roads:
-        data: { source: osm, layer: roads }
+        data: { source: osm }
         filter: { $zoom: {min: 7}, not: { kind: rail } }
         draw:
             lines:
@@ -78,22 +95,22 @@ layers:
             filter: { kind: highway }
             draw:
                 lines:
-                    order: 8
+                    order: global.order
                     color: [.8,.8,.8]#[1.000,0.897,0.058]
                     width: [[1,0px], [6,.25px], [11, 2px], [14, 3px], [16, 4px], [17, 10m]]
             link:
-                filter: { is_link: yes } # on- and off-ramps, etc
+                filter: { is_link: true } # on- and off-ramps, etc
                 draw:
                     lines:
-                        color: [.7,.7,.7]#[1.000,0.933,0.710]
+                        color: [.7,.7,.7]
                         width: [[10,0px], [14, 3px], [16, 5px], [18, 10m]]
                 tunnel-link:
-                    filter: {is_tunnel: yes, $zoom: {min: 13} }
+                    filter: {is_tunnel: true, $zoom: {min: 13} }
                     draw:
                         lines:
                             color: [.5,.5,.5]#[0.805,0.748,0.557]
             tunnel:
-                filter: {is_tunnel: yes, $zoom: {min: 13} }
+                filter: {is_tunnel: true, $zoom: {min: 13} }
                 draw:
                     lines:
                         order: 5
@@ -105,17 +122,17 @@ layers:
                     color: [[13, [.6,.6,.6]], [17, white]]
                     width: [[1,0px], [6,.5px], [11,1px], [14, 2px], [16, 2.5px], [19, 8m]]
                     primary:
-                        filter: { highway: primary }
+                        filter: { kind_detail: primary }
                         draw:
                             lines:
                                 width: [[1,0px], [6,.5px], [11,1px], [11, 1.5px], [13, 2.5px], [16, 2.5px], [19, 8m]]
                     secondary:
-                        filter: { highway: secondary }
+                        filter: { kind_detail: secondary }
                         draw:
                             lines:
                                 width: [[1,0px], [6,.5px], [11,1px], [13, 1.5px], [14, 2.5px], [16, 2.5px], [19, 8m]]
                     tertiary:
-                        filter: { highway: tertiary }
+                        filter: { kind_detail: tertiary }
                         draw:
                             lines:
                                 width: [[1,0px], [6,.5px], [11,1px], [13, .75px], [14, 2.5px], [16, 2.5px], [19, 8m]]
@@ -125,177 +142,11 @@ layers:
                 lines:
                     color: [0.8, 0.8, 0.8]
                     width: [[14,.1px],[16,.5px], [17, 2m]]
-        z-order:
-            filter: { $zoom: {min: 14} }
-            draw:
-                spline:
-                    order: function() {return 6 + feature.sort_key;}
-cameras:
-    perspective:
-        type: perspective
+
 styles:
-    functions-aastep:
-        shaders:
-            extensions: OES_standard_derivatives
-            blocks:
-                global: |
-                    // AntiAliased Step function
-                    //=============================
-                    float aastep(float threshold, float value) {
-                        #ifdef TANGRAM_FRAGMENT_SHADER
-                            #ifdef TANGRAM_EXTENSION_OES_standard_derivatives
-                                float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
-                                return smoothstep(threshold-afwidth, threshold+afwidth, value);
-                            #else
-                                return step(threshold, value);
-                            #endif  
-                        #else
-                            return step(threshold, value);
-                        #endif
-                    }
-
-                    vec2 aastep(vec2 threshold, vec2 value) {
-                        return vec2(aastep(threshold.x, value.x),
-                                    aastep(threshold.y, value.y));
-                    }
-    functions-map:
-        shaders:
-            defines:
-                EPSILON: 0.0000001
-            blocks:
-                global: |
-                    float map (in float value, in float inputMin, in float inputMax, in float outputMin, in float outputMax, bool clamp) {
-                        if (abs(inputMin - inputMax) < EPSILON){
-                            return outputMin;
-                        } else {
-                            float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
-                        
-                            if( clamp ){
-                                if(outputMax < outputMin){
-                                    if( outVal < outputMax ) outVal = outputMax;
-                                    else if( outVal > outputMin ) outVal = outputMin;
-                                }else{
-                                    if( outVal > outputMax ) outVal = outputMax;
-                                    else if( outVal < outputMin ) outVal = outputMin;
-                                }
-                            }
-                            return outVal;
-                        }
-                    }
-                    float map (in float value, in float inputMin, in float inputMax, in float outputMin, in float outputMax) {
-                        return map(value, inputMin, inputMax, outputMin, outputMax, true); 
-                    }
-    geometry-matrices:
-        shaders:
-            defines:
-                PI: 3.14159265358979323846
-            blocks:
-                global: |
-                    // Rotate in 2, 3 and 4 dimensions
-                    // ================================
-                    mat2 rotate2D (float angle) {
-                        return mat2(cos(angle),-sin(angle),
-                                    sin(angle),cos(angle));
-                    }
-    shapes-rect:
-        shaders:
-            blocks:
-                global: |
-                    // get distance field of a rectangle in the center
-                    // ================================
-                    float rectDF(vec2 st, vec2 size) {
-                        //float aspect = u_resolution.x/u_resolution.y;
-                        st = st*2.-1.;
-                        //st.x *= aspect;
-                        return length(max(abs(st)-size,.0));
-                    }
-                    float rectDF(vec2 st, float size) {
-                        //float aspect = u_resolution.x/u_resolution.y;
-                        st = st*2.-1.;
-                        //st.x *= aspect;
-                        return length(max(abs(st)-size,.0));
-                    }
-                    
-                    // Draw a round corners rectangle in the center
-                    // ================================
-                    float rect(vec2 st, vec2 size, float radio) {
-                        radio = max(.000001, radio);
-                        return 1.0-step(radio, rectDF(st, size-radio));
-                    }
-                    
-                    float rect(vec2 st, float size, float radio) {
-                        return rect(st,vec2(size),radio);
-                    }
-                    
-                    // Draw a rectangle in the center
-                    // ================================
-                    float rect(vec2 st, vec2 size){
-                        size = .25-size*.125;
-                        vec2 uv = step(size,st*(1.0-st));
-                        return (uv.x*uv.y);
-                    }
-                    
-                    float rect(vec2 st, float size){
-                        return rect(st,vec2(size));
-                    }
-    shapes-cross:
-        mix: shapes-rect
-        shaders:
-            blocks:
-                global: |
-                    // Draw a Cross in the middle of the ST space
-                    float cross (vec2 st, float size, float width) {
-                        return  clamp(  rect(st, vec2(size*0.5,width*0.125)) +
-                                        rect(st, vec2(width*0.125,size*0.5)),0.,1.);
-                    }
-    spaceTile:
-        shaders:
-            defines:
-                TILE_SCALE: 0.0002445
-                NORMALIZED_SHORT(x): (x * 32767.)
-            blocks:
-                global: |
-                    // Variant to be add to both vertex and fragments shaders
-                    varying vec3 v_pos;
-                    //
-                    // Get the coordinates in tile space
-                    // ================================
-                    vec2 getTileCoords () {
-                        return fract(v_pos.xy*TILE_SCALE);
-                    }
-
-                position: |
-                    // Normalize the attribute position of a vertex
-                    v_pos = NORMALIZED_SHORT(a_position.xyz);
-    grid:
-        mix: spaceTile
-        shaders:
-            blocks:
-                global: |
-                    //  Simple Grid
-                    //=============================
-                    float grid(in vec2 st, in float res, in float press){
-                        st = fract(st*res);
-                        return 1.0-(step(press*res*.7,st.x) * step(press*res*.7,st.y));
-                    }
-                    float grid(in vec2 st, in float res){
-                        return grid(st,res,0.005);
-                    }
-                    // GridTile
-                    //=============================
-                    float TileGrid(float res){
-                        vec2 st = getTileCoords()*100.*res;
-                        float pct = 0.0;
-                        float press = 0.5+(1.0-fract(u_map_position.z))*0.1;
-                        pct += grid(st,0.02,press)*.5;
-                        pct += grid(st,0.01,press)*.25;
-                        //pct += grid(st,0.1,press)*.25;
-                        return pct*.5;
-                    }
-                    float TileGrid(){ return mix(TileGrid(1.),TileGrid(2.),fract(u_map_position.z)); }
     hud:
         base: polygons
-        mix: [shapes-cross, grid]
+        mix: [shapes-cross, filter-grid]
         shaders:
             blocks:
                 filter: |
@@ -314,7 +165,7 @@ styles:
                     vec2 st = getTileCoords();
                     float zoom = 0.0001+fract(u_map_position.z);
                     float overlayGrid = 0.0;
-                    overlayGrid += TileGrid()*.5;
+                    //overlayGrid += TileGrid()*.5;
                     //
                     // CROSSES
                     vec2 crosses_st = st + .5;

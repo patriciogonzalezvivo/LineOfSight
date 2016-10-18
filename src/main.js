@@ -21,6 +21,8 @@ var place = "Select a place on the world and hover over the visible satellites";
 var placeCounter = 0;
 var picking = false;
 
+var PELIAS_KEY = 'search-ReWCLH4';
+
 // ============================================= INIT
 // Prepair leafleat and tangram
 map = (function () {
@@ -58,6 +60,7 @@ map = (function () {
         dragging: (window.self !== window.top && L.Browser.touch) ? false : true,
         tap: (window.self !== window.top && L.Browser.touch) ? false : true,
     });
+    L.control.geocoder(PELIAS_KEY,{pointIcon: false, markers: false}).addTo(map);
 
     // Tangram Layer
     var layer = Tangram.leafletLayer({
@@ -177,29 +180,21 @@ function initFeatureSelection () {
     selection_info.style.display = 'block';
     selection_info.style.zindex = 1000;
 
-    // Show selected feature on hover
-    map.getContainer().addEventListener('mousemove', function (event) {
-        if (picking) return;
-        var pixel = { x: event.clientX, y: event.clientY };
-        scene.getFeatureAt(pixel).then(function(selection){
-            updateSelectedFeature(selection, pixel, false);
-            stopMovement(selection, pixel);
-        });
-    });
-
-    map.getContainer().addEventListener('click', function (event) {
-        picking = !picking;
-        var pixel = { x: event.clientX, y: event.clientY };
-
-        // Don't show labels while panning
-        if (scene.panning == true) {
-            if (selection_info.parentNode != null) {
-                selection_info.parentNode.removeChild(selection_info);
+    layer.setSelectionEvents({
+        hover: function(selection) {
+            if (picking) return;
+            updateSelectedFeature(selection,false);
+            stopMovement(selection);
+        },
+        click: function(selection) {
+            // Don't show labels while panning
+            if (scene.panning == true) {
+                if (selection_info.parentNode != null) {
+                    selection_info.parentNode.removeChild(selection_info);
+                }
+            } else {
+                updateSelectedFeature(selection,true);
             }
-        } else {
-            scene.getFeatureAt(pixel).then(function (selection) {
-                updateSelectedFeature(selection, pixel, true);
-            });
         }
     });
 
@@ -213,7 +208,7 @@ function initFeatureSelection () {
 
 function updateType() {
     // Search for active_type
-    scene.config.layers.orbit.properties.active_types = active_types;
+    scene.config.global.active_types = active_types;
 
     // Update state
     var activeTypesArrag = active_types.split(',');
@@ -236,7 +231,7 @@ function updateType() {
 
 function updateNameQuerry() {
     // Search for active_type
-    scene.config.layers.orbit.properties.active_names = active_names;
+    scene.config.global.active_names = active_names;
 
     reloadTangram();
     updateSearchPath();
@@ -269,11 +264,11 @@ function resizeMap() {
     // map.invalidateSize(false);
 }
 
-var stopMovement = debounce(function(selection, pixel) {
-    updateSelectedFeature(selection, pixel, true);
+var stopMovement = debounce(function(selection) {
+    updateSelectedFeature(selection, true);
 }, 500);
 
-function updateSelectedFeature(selection, pixel, moreInfo) {
+function updateSelectedFeature(selection, moreInfo) {
     // Return if there is no selection
     if (!selection) { return; }
 
@@ -313,7 +308,7 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
             }
 
             if (last_selected !== feature.properties.id) {
-                scene.config.layers.orbit.properties.hovered = feature.properties.id;
+                scene.config.global.hovered = feature.properties.id;
                 reloadTangram();
                 last_selected = feature.properties.id;
             }
@@ -349,8 +344,8 @@ function updateSelectedFeature(selection, pixel, moreInfo) {
         }
 
         if (label !== '') {
-            selection_info.style.left = (pixel.x + 5) + 'px';
-            selection_info.style.top = (pixel.y + 15) + 'px';
+            selection_info.style.left = (selection.pixel.x + 5) + 'px';
+            selection_info.style.top = (selection.pixel.y + 15) + 'px';
             selection_info.innerHTML = '<div id="coorner-top-left" class="coorner"></div><div id="coorner-top-right" class="coorner"></div><div id="coorner-bottom-left" class="coorner"></div><div id="coorner-bottom-right" class="coorner"></div><span class="labelInner">' + label + '</span>';
             map.getContainer().appendChild(selection_info);
         } else if (selection_info.parentNode != null) {
@@ -407,7 +402,6 @@ function updateGeocode (lat, lng) {
 
     // This is my API Key for this project.
     // They are free! get one at https://mapzen.com/developers/sign_in
-    var PELIAS_KEY = 'search-ReWCLH4';
     var endpoint = '//search.mapzen.com/v1/reverse?point.lat=' + lat + '&point.lon=' + lng + '&size=1&layers=coarse&api_key=' + PELIAS_KEY;
 
     getHttp(endpoint, function(err, res){
